@@ -1,0 +1,6 @@
+# Cloudflare Pages — SPA fallback
+# If you deploy via Cloudflare Pages (not GitHub Pages),
+# this file handles all routing automatically.
+# No Worker needed.
+
+/*   /index.html   200

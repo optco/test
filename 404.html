@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>theattn</title>
+  <!--
+    GitHub Pages SPA Routing Shim
+    ─────────────────────────────
+    When GitHub Pages can't find /user1, it serves this 404.html.
+    We store the intended path in sessionStorage, then redirect to /
+    where index.html reads it and routes the user correctly.
+  -->
+  <script>
+    (function() {
+      var path = window.location.pathname;
+      // Don't redirect if we're already at root or it's an asset
+      if (path === '/' || /\.\w+$/.test(path)) return;
+      sessionStorage.setItem('_attn_redirect', path + window.location.search);
+      window.location.replace('/');
+    })();
+  </script>
+</head>
+<body></body>
+</html>

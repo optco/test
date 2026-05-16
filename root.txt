@@ -1,0 +1,12 @@
+theattn/
+├── index.html          ← Main app shell (SPA entry point)
+├── 404.html            ← GitHub Pages routing shim
+├── _redirects          ← Cloudflare Pages routing (if used)
+├── cloudflare-worker.js← Cloudflare Worker (if using GitHub Pages)
+├── css/
+│   └── style.css       ← Full liquid glass design system
+├── js/
+│   └── app.js          ← Router + profile renderer
+└── data/
+    └── users.json      ← All user profile data
+
