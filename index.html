@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Attn</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Ambient Liquid Background Blobs -->
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+
+    <div class="container">
+        <!-- Profile Card (White Liquid Glass) -->
+        <main class="profile-card" id="profile-card">
+            <div id="loading" class="loading">Loading profile...</div>
+            
+            <div id="profile-content" class="hidden">
+                <div class="avatar-wrapper">
+                    <img id="user-avatar" src="" alt="User Avatar">
+                </div>
+                <h1 id="user-name"></h1>
+                <p id="user-role" class="role"></p>
+                <p id="user-bio" class="bio"></p>
+                
+                <div id="user-links" class="links-container">
+                    <!-- Dynamic links inject here -->
+                </div>
+            </div>
+
+            <div id="error-content" class="hidden">
+                <h1>Profile Not Found</h1>
+                <p>The profile you are looking for doesn't exist or has moved.</p>
+                <a href="/" class="home-btn">Go Home</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "user1": {
+    "name": "Alex Morgan",
+    "role": "Digital Architect",
+    "bio": "Crafting fluid digital experiences with a focus on minimalist aesthetics and functional design.",
+    "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+    "links": [
+      {"label": "Portfolio", "url": "https://example.com"},
+      {"label": "LinkedIn", "url": "https://linkedin.com"}
+    ]
+  },
+  "user2": {
+    "name": "Sarah Jenkins",
+    "role": "Visual Designer",
+    "bio": "Specializing in high-end editorial layouts, brand identities, and premium user interfaces.",
+    "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80",
+    "links": [
+      {"label": "Behance", "url": "https://behance.net"},
+      {"label": "Instagram", "url": "https://instagram.com"}
+    ]
+  }
+}

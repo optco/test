@@ -1,0 +1,30 @@
+Log into your Cloudflare Dashboard.
+
+Navigate to Workers & Pages > Create application > Create Worker.
+
+Name it theattn-router and click Deploy.
+
+Click Edit Code and replace the default code entirely with this snippet:
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    
+    // If the request is for an asset (css, js, json, images), let it pass straight to GitHub
+    if (url.pathname.includes('.') && !url.pathname.endsWith('.html')) {
+      return fetch(request);
+    }
+
+    // For profile paths (like /user1), rewrite the request internally to fetch index.html
+    url.pathname = '/index.html';
+    return fetch(url.toString(), request);
+  },
+};
+
+Save and Deploy the worker.
+
+    Go back to your Worker's panel, click the Triggers tab, and under Routes, click Add Route.
+
+    Set the route to: [theattn.com/](https://theattn.com/)* and select your zone.
+
+Now, when someone visits [theattn.com/user1](https://theattn.com/user1), Cloudflare serves your root index.html file quietly in the background, keeping the clean URL structure intact while your JavaScript seamlessly handles parsing the profile!
