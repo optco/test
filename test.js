@@ -215,9 +215,9 @@
   // ═══════════════════════════════════════════════════════════
   // XHR-BASED UPLOAD TEST — Real-time upload progress
   // ═══════════════════════════════════════════════════════════
-  async function measureUpload() {
+    async function measureUpload() {
     setPhase('ul');
-    log('Starting upload throughput analysis (XHR)...', 'info');
+    log('Starting upload throughput analysis...', 'info');
     speedLabel.textContent = 'UPLOADING';
     gaugeArc.style.stroke = 'var(--warn)';
     gaugeArc.style.filter = 'drop-shadow(0 0 6px var(--warn))';
@@ -228,9 +228,8 @@
     const samples = [];
     let lastSampleTime = startTime;
     let lastSampleBytes = 0;
-    let lastLogTime = startTime;
     const PARALLEL = 4;
-    const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB chunks
+    const CHUNK_SIZE = 512 * 1024; // 512KB chunks (faster iterations, smoother gauge)
 
     function startUpload() {
       return new Promise((resolve) => {
@@ -239,11 +238,13 @@
           return;
         }
 
+        // FAST payload generation (prevents UI freeze)
         const data = new Uint8Array(CHUNK_SIZE);
-        crypto.getRandomValues(data);
+        data.fill(0x42); 
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `https://speed.cloudflare.com/__up?_=${Math.random()}`, true);
+        xhr.timeout = 4000; // 4 second hard timeout per chunk
 
         let prevLoaded = 0;
 
@@ -260,20 +261,35 @@
               const mbps = (bytesInInterval * 8) / (timeInInterval * 1e6);
               samples.push(mbps);
               setGauge(mbps);
-
-              if (now - lastLogTime > 1000) {
-                log(`  ↑ ${mbps.toFixed(1)} Mbps (${mbpsToGbps(mbps)} Gbps)`, 'info');
-                lastLogTime = now;
-              }
             }
             lastSampleTime = now;
             lastSampleBytes = totalBytes;
           }
         };
 
-        xhr.onloadend = function() { resolve(); };
-        xhr.onerror   = function() { resolve(); };
-        xhr.send(data);
+        const finish = () => {
+          // Capture final sample before resolving
+          const now = performance.now();
+          if (now - lastSampleTime > 0) {
+            const bytesInInterval = totalBytes - lastSampleBytes;
+            const timeInInterval = (now - lastSampleTime) / 1000;
+            if (timeInInterval > 0 && bytesInInterval > 0) {
+              const mbps = (bytesInInterval * 8) / (timeInInterval * 1e6);
+              samples.push(mbps);
+            }
+          }
+          resolve();
+        };
+
+        xhr.onloadend = finish;
+        xhr.onerror = finish;
+        xhr.ontimeout = finish; // Prevents infinite hanging
+        
+        try {
+          xhr.send(data);
+        } catch (e) {
+          finish();
+        }
       });
     }
 
@@ -290,6 +306,7 @@
     const sorted = [...samples].sort((a, b) => a - b);
     const trimmed = sorted.slice(Math.floor(sorted.length * 0.1), Math.floor(sorted.length * 0.9));
     const avg = trimmed.length > 0 ? trimmed.reduce((a, b) => a + b, 0) / trimmed.length : 0;
+    
     log(`Upload complete: ${avg.toFixed(1)} Mbps (${mbpsToGbps(avg)} Gbps)`, 'ok');
     return avg;
   }
