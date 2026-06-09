@@ -248,7 +248,12 @@
     line-height: 1;
     color: var(--text-bright);
     letter-spacing: -2px;
-    transition: color 0.3s;
+    transition: color 0.3s, font-size 0.3s, letter-spacing 0.3s;
+  }
+
+  .speed-value.rating {
+    font-size: 64px;
+    letter-spacing: 4px;
   }
 
   /* dual unit row */
@@ -304,6 +309,17 @@
     color: var(--text-dim);
     text-transform: uppercase;
     margin-top: 8px;
+    max-width: 320px;
+    text-align: center;
+    line-height: 1.4;
+    transition: color 0.3s, font-size 0.3s;
+  }
+
+  .speed-label.rating-desc {
+    font-size: 12px;
+    color: var(--text);
+    letter-spacing: 1px;
+    text-transform: none;
   }
 
   /* ── BUTTON ── */
@@ -543,6 +559,7 @@
     .conn-row { flex-direction: column; }
     .gauge-wrap { width: 260px; height: 164px; }
     .speed-value { font-size: 60px; }
+    .speed-value.rating { font-size: 48px; }
   }
 
   @keyframes count-up {
@@ -700,6 +717,40 @@
     return Math.log10(mbps + 1) / Math.log10(MAX_SPEED + 1);
   }
 
+  // Speed rating based on download speed
+  function getSpeedRating(mbps) {
+    if (mbps < 10) return { 
+      label: 'BAD', 
+      color: '#ff3547', 
+      desc: 'Frequent buffering. Basic email only.',
+      fullDesc: 'Frequent buffering and highly unstable. Impossible to stream HD video; suitable only for basic email and light web browsing for a single device.'
+    };
+    if (mbps < 25) return { 
+      label: 'SLOW', 
+      color: 'var(--warn)', 
+      desc: 'Buffers on 1080p. Single device use.',
+      fullDesc: 'Works for basic use but will buffer when watching 1080p video. Struggles to support multiple devices.'
+    };
+    if (mbps < 100) return { 
+      label: 'GOOD', 
+      color: '#ffe44d', 
+      desc: 'HD streaming, 1-3 people.',
+      fullDesc: 'Enough to comfortably handle HD streaming, basic gaming, and video conferencing for 1 to 3 people.'
+    };
+    if (mbps < 300) return { 
+      label: 'FAST', 
+      color: 'var(--accent)', 
+      desc: '4K streaming, multi-device.',
+      fullDesc: 'The baseline for modern, multi-device households. Handles 4K streaming and large file downloads simultaneously.'
+    };
+    return { 
+      label: 'VERY FAST', 
+      color: '#00ffcc', 
+      desc: 'Heavy usage, lag-free gaming.',
+      fullDesc: 'Ideal for heavy usage. Allows for lag-free gaming, downloading massive files instantly, and streaming in 4K across multiple devices without interruption.'
+    };
+  }
+
   // Ticks: logarithmically spaced for better readability
   (function drawTicks() {
     const g = document.getElementById('ticks');
@@ -794,6 +845,7 @@
     setPhase('dl');
     log('Starting download throughput analysis...', 'info');
     speedLabel.textContent = 'DOWNLOADING';
+    speedLabel.classList.remove('rating-desc');
     const samples=[], dur=6000, t0=Date.now();
     while (Date.now()-t0 < dur) {
       const ts=Date.now();
@@ -849,6 +901,11 @@
   async function runTest() {
     startBtn.disabled = true;
     startBtn.textContent = 'RUNNING...';
+
+    // Reset rating state
+    liveSpeed.style.color = '';
+    liveSpeed.classList.remove('rating');
+    speedLabel.classList.remove('rating-desc');
 
     ['dl-val','ul-val','ping-val'].forEach(id => {
       const el=document.getElementById(id);
@@ -906,14 +963,20 @@
     animateValue(ulEl, parseFloat(ulMbps.toFixed(1)));
     document.getElementById('ul-gbps').textContent = mbpsToGbps(ulMbps);
 
-    // Done
+    // Done - Show rating
     setPhase('done'); markDone('done');
-    speedLabel.textContent = 'TEST COMPLETE';
-    liveSpeed.textContent  = '✓';
-    liveGbps.textContent   = '—';
+    const rating = getSpeedRating(dlMbps);
+    liveSpeed.textContent = rating.label;
+    liveSpeed.style.color = rating.color;
+    liveSpeed.classList.add('rating');
+    liveGbps.textContent = '—';
+    speedLabel.textContent = rating.desc;
+    speedLabel.classList.add('rating-desc');
 
     log('─────────────────────────────────────', '');
     log(`RESULT  ↓ ${dlMbps.toFixed(1)} Mbps (${mbpsToGbps(dlMbps)} Gbps)  ↑ ${ulMbps.toFixed(1)} Mbps (${mbpsToGbps(ulMbps)} Gbps)  PING ${pr.ping}ms`, 'ok');
+    const logType = (rating.label === 'BAD' || rating.label === 'SLOW') ? 'warn' : 'ok';
+    log(`RATING: ${rating.label} — ${rating.fullDesc}`, logType);
     log('Diagnostic session complete.', 'ok');
 
     startBtn.textContent = 'RUN AGAIN';
