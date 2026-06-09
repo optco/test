@@ -693,13 +693,20 @@
   const startBtn  = document.getElementById('startBtn');
   const logPanel  = document.getElementById('logPanel');
 
-  // Ticks: 0 100 200 500 1000 Mbps
+  // Logarithmic scale: maps 0-1000 Mbps to 0-1 using log10
+  // This gives much more visual movement for slower speeds
+  function speedToPercent(mbps) {
+    if (mbps <= 0) return 0;
+    return Math.log10(mbps + 1) / Math.log10(MAX_SPEED + 1);
+  }
+
+  // Ticks: logarithmically spaced for better readability
   (function drawTicks() {
     const g = document.getElementById('ticks');
     const cx = 160, cy = 170, r = 130;
-    const labels = [0, 100, 200, 500, 750, 1000];
+    const labels = [0, 10, 50, 100, 500, 1000];
     labels.forEach(v => {
-      const pct = v / MAX_SPEED;
+      const pct = speedToPercent(v);
       const ang = 180 - pct * 180;
       const rad = ang * Math.PI / 180;
       const x1 = cx + (r-14)*Math.cos(rad), y1 = cy-(r-14)*Math.sin(rad);
@@ -714,7 +721,7 @@
   function mbpsToGbps(m) { return (m/1000).toFixed(3); }
 
   function setGauge(mbps) {
-    const pct    = Math.min(mbps / MAX_SPEED, 1);
+    const pct    = speedToPercent(mbps);
     const offset = ARC_LEN - pct * ARC_LEN;
     gaugeArc.style.strokeDashoffset = offset;
     const ang = -90 + pct * 180;
@@ -913,5 +920,6 @@
     startBtn.disabled    = false;
   }
 </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"e164e38ad2c444e6a2ad7c864854eb62","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
