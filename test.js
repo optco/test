@@ -16,32 +16,27 @@
 
   function getSpeedRating(mbps) {
     if (mbps < 10) return { 
-      label: 'BAD', 
-      color: '#ff3547', 
+      label: 'BAD', color: '#ff3547', 
       desc: 'Frequent buffering. Basic email only.',
       fullDesc: 'Frequent buffering and highly unstable. Impossible to stream HD video; suitable only for basic email and light web browsing for a single device.'
     };
     if (mbps < 25) return { 
-      label: 'SLOW', 
-      color: 'var(--warn)', 
+      label: 'SLOW', color: 'var(--warn)', 
       desc: 'Buffers on 1080p. Single device use.',
       fullDesc: 'Works for basic use but will buffer when watching 1080p video. Struggles to support multiple devices.'
     };
     if (mbps < 100) return { 
-      label: 'GOOD', 
-      color: '#ffe44d', 
+      label: 'GOOD', color: '#ffe44d', 
       desc: 'HD streaming, 1-3 people.',
       fullDesc: 'Enough to comfortably handle HD streaming, basic gaming, and video conferencing for 1 to 3 people.'
     };
     if (mbps < 300) return { 
-      label: 'FAST', 
-      color: 'var(--accent)', 
+      label: 'FAST', color: 'var(--accent)', 
       desc: '4K streaming, multi-device.',
       fullDesc: 'The baseline for modern, multi-device households. Handles 4K streaming and large file downloads simultaneously.'
     };
     return { 
-      label: 'VERY FAST', 
-      color: '#00ffcc', 
+      label: 'VERY FAST', color: '#00ffcc', 
       desc: 'Heavy usage, lag-free gaming.',
       fullDesc: 'Ideal for heavy usage. Allows for lag-free gaming, downloading massive files instantly, and streaming in 4K across multiple devices without interruption.'
     };
@@ -125,9 +120,9 @@
     await sleep(400);
     const pings = [];
     for (let i=0;i<5;i++) {
-      const t = Date.now();
+      const t = performance.now();
       try { await fetch(`https://www.cloudflare.com/cdn-cgi/trace?_=${Math.random()}`,{cache:'no-store',mode:'no-cors'}); } catch(e){}
-      pings.push(Date.now()-t);
+      pings.push(performance.now()-t);
       await sleep(100);
     }
     const avg    = Math.round(pings.reduce((a,b)=>a+b,0)/pings.length);
@@ -136,46 +131,78 @@
     return { ping:avg, jitter };
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // XHR-BASED DOWNLOAD TEST — Real-time progress measurement
+  // ═══════════════════════════════════════════════════════════
   async function measureDownload() {
     setPhase('dl');
-    log('Starting download throughput analysis...', 'info');
+    log('Starting download throughput analysis (XHR)...', 'info');
     speedLabel.textContent = 'DOWNLOADING';
     speedLabel.classList.remove('rating-desc');
 
+    const duration = 10000;
+    const startTime = performance.now();
+    let totalBytes = 0;
     const samples = [];
-    const dur = 10000;
-    const t0 = Date.now();
-    const CHUNK_SIZE = 2 * 1024 * 1024;
+    let lastSampleTime = startTime;
+    let lastSampleBytes = 0;
+    let lastLogTime = startTime;
     const PARALLEL = 4;
 
-    async function downloadWorker(workerId) {
-      while (Date.now() - t0 < dur) {
-        const ts = Date.now();
-        try {
-          const res = await fetch(`https://speed.cloudflare.com/__down?bytes=${CHUNK_SIZE}&_=${Math.random()}`, {
-            cache: 'no-store'
-          });
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          
-          const blob = await res.blob();
-          const bytes = blob.size;
-          const elapsed = (Date.now() - ts) / 1000;
-          
-          if (elapsed <= 0) continue;
-          const mbps = (bytes * 8) / (elapsed * 1e6);
-          samples.push(mbps);
-          setGauge(mbps);
-          log(`  [W${workerId}] ${mbps.toFixed(1)} Mbps (${mbpsToGbps(mbps)} Gbps)`);
-        } catch (e) {
-          log(`  [W${workerId}] Error: ${e.message}`, 'warn');
+    function startDownload() {
+      return new Promise((resolve) => {
+        if (performance.now() - startTime > duration) {
+          resolve();
+          return;
         }
+
+        const chunkSize = 5 * 1024 * 1024; // 5MB chunks
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `https://speed.cloudflare.com/__down?bytes=${chunkSize}&_=${Math.random()}`, true);
+        xhr.responseType = 'arraybuffer';
+
+        let prevLoaded = 0;
+
+        xhr.onprogress = function(e) {
+          const now = performance.now();
+          const newBytes = e.loaded - prevLoaded;
+          totalBytes += newBytes;
+          prevLoaded = e.loaded;
+
+          // Update gauge and sample every 200ms
+          if (now - lastSampleTime > 200) {
+            const bytesInInterval = totalBytes - lastSampleBytes;
+            const timeInInterval = (now - lastSampleTime) / 1000;
+            if (timeInInterval > 0) {
+              const mbps = (bytesInInterval * 8) / (timeInInterval * 1e6);
+              samples.push(mbps);
+              setGauge(mbps);
+
+              // Log every 1 second to avoid spam
+              if (now - lastLogTime > 1000) {
+                log(`  ↓ ${mbps.toFixed(1)} Mbps (${mbpsToGbps(mbps)} Gbps)`, 'info');
+                lastLogTime = now;
+              }
+            }
+            lastSampleTime = now;
+            lastSampleBytes = totalBytes;
+          }
+        };
+
+        xhr.onloadend = function() { resolve(); };
+        xhr.onerror   = function() { resolve(); };
+        xhr.send();
+      });
+    }
+
+    async function worker() {
+      while (performance.now() - startTime < duration) {
+        await startDownload();
       }
     }
 
     const workers = [];
-    for (let i = 0; i < PARALLEL; i++) {
-      workers.push(downloadWorker(i + 1));
-    }
+    for (let i = 0; i < PARALLEL; i++) workers.push(worker());
     await Promise.all(workers);
 
     const sorted = [...samples].sort((a, b) => a - b);
@@ -185,48 +212,79 @@
     return avg;
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // XHR-BASED UPLOAD TEST — Real-time upload progress
+  // ═══════════════════════════════════════════════════════════
   async function measureUpload() {
     setPhase('ul');
-    log('Starting upload throughput analysis...', 'info');
+    log('Starting upload throughput analysis (XHR)...', 'info');
     speedLabel.textContent = 'UPLOADING';
     gaugeArc.style.stroke = 'var(--warn)';
     gaugeArc.style.filter = 'drop-shadow(0 0 6px var(--warn))';
 
+    const duration = 8000;
+    const startTime = performance.now();
+    let totalBytes = 0;
     const samples = [];
-    const dur = 8000;
-    const t0 = Date.now();
-    const CHUNK_SIZE = 1 * 1024 * 1024;
+    let lastSampleTime = startTime;
+    let lastSampleBytes = 0;
+    let lastLogTime = startTime;
     const PARALLEL = 4;
+    const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB chunks
 
-    async function uploadWorker(workerId) {
-      while (Date.now() - t0 < dur) {
-        const ts = Date.now();
-        try {
-          const data = new Uint8Array(CHUNK_SIZE);
-          crypto.getRandomValues(data);
-          
-          await fetch(`https://speed.cloudflare.com/__up?_=${Math.random()}`, {
-            method: 'POST',
-            body: new Blob([data]),
-            cache: 'no-store'
-          });
-          
-          const elapsed = (Date.now() - ts) / 1000;
-          if (elapsed <= 0) continue;
-          const mbps = (CHUNK_SIZE * 8) / (elapsed * 1e6);
-          samples.push(mbps);
-          setGauge(mbps);
-          log(`  [W${workerId}] ${mbps.toFixed(1)} Mbps (${mbpsToGbps(mbps)} Gbps)`);
-        } catch (e) {
-          log(`  [W${workerId}] Error: ${e.message}`, 'warn');
+    function startUpload() {
+      return new Promise((resolve) => {
+        if (performance.now() - startTime > duration) {
+          resolve();
+          return;
         }
+
+        const data = new Uint8Array(CHUNK_SIZE);
+        crypto.getRandomValues(data);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `https://speed.cloudflare.com/__up?_=${Math.random()}`, true);
+
+        let prevLoaded = 0;
+
+        xhr.upload.onprogress = function(e) {
+          const now = performance.now();
+          const newBytes = e.loaded - prevLoaded;
+          totalBytes += newBytes;
+          prevLoaded = e.loaded;
+
+          if (now - lastSampleTime > 200) {
+            const bytesInInterval = totalBytes - lastSampleBytes;
+            const timeInInterval = (now - lastSampleTime) / 1000;
+            if (timeInInterval > 0) {
+              const mbps = (bytesInInterval * 8) / (timeInInterval * 1e6);
+              samples.push(mbps);
+              setGauge(mbps);
+
+              if (now - lastLogTime > 1000) {
+                log(`  ↑ ${mbps.toFixed(1)} Mbps (${mbpsToGbps(mbps)} Gbps)`, 'info');
+                lastLogTime = now;
+              }
+            }
+            lastSampleTime = now;
+            lastSampleBytes = totalBytes;
+          }
+        };
+
+        xhr.onloadend = function() { resolve(); };
+        xhr.onerror   = function() { resolve(); };
+        xhr.send(data);
+      });
+    }
+
+    async function worker() {
+      while (performance.now() - startTime < duration) {
+        await startUpload();
       }
     }
 
     const workers = [];
-    for (let i = 0; i < PARALLEL; i++) {
-      workers.push(uploadWorker(i + 1));
-    }
+    for (let i = 0; i < PARALLEL; i++) workers.push(worker());
     await Promise.all(workers);
 
     const sorted = [...samples].sort((a, b) => a - b);
