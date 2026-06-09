@@ -217,7 +217,7 @@
   // ═══════════════════════════════════════════════════════════
      async function measureUpload() {
     setPhase('ul');
-    log('Starting upload throughput analysis (Fetch)...', 'info');
+    log('Starting upload throughput analysis (no-cors)...', 'info');
     speedLabel.textContent = 'UPLOADING';
     gaugeArc.style.stroke = 'var(--warn)';
     gaugeArc.style.filter = 'drop-shadow(0 0 6px var(--warn))';
@@ -225,28 +225,26 @@
     const duration = 8000;
     const startTime = performance.now();
     const samples = [];
-    const PARALLEL = 3; // Reduced to 3 to be gentler on the network
+    const PARALLEL = 4;
     const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunks
 
     async function uploadWorker() {
       while (performance.now() - startTime < duration) {
-        // Fast, non-blocking payload generation
+        // Generate payload
         const data = new Uint8Array(CHUNK_SIZE);
-        data.fill(0x42); 
-        const blob = new Blob([data]);
+        data.fill(0x42); // Fast, synchronous fill
+        const blob = new Blob([data]); 
         const ts = performance.now();
-        
+
         try {
-          const response = await fetch(`https://speed.cloudflare.com/__up?_=${Math.random()}`, {
+          // 'no-cors' completely bypasses the OPTIONS preflight that Cloudflare is blocking.
+          // The request goes through as an "opaque" transaction.
+          await fetch(`https://speed.cloudflare.com/__up?_=${Math.random()}`, {
             method: 'POST',
             body: blob,
             cache: 'no-store',
-            mode: 'cors'
+            mode: 'no-cors' 
           });
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
           
           const elapsed = (performance.now() - ts) / 1000;
           if (elapsed > 0) {
@@ -255,8 +253,7 @@
             setGauge(mbps);
           }
         } catch (e) {
-          log(`  Upload chunk blocked: ${e.message}`, 'warn');
-          break; // Stop this worker immediately if blocked to prevent spam
+          // In no-cors, fetch rarely throws unless the network is completely dead.
         }
       }
     }
@@ -270,14 +267,11 @@
     const avg = trimmed.length > 0 ? trimmed.reduce((a, b) => a + b, 0) / trimmed.length : 0;
 
     if (avg === 0) {
-      log('Upload test failed completely. Your browser or network is blocking POST requests.', 'warn');
-      log('ACTION: Disable ad-blockers (uBlock, AdBlock Plus) for this site and try again.', 'warn');
+      log('Upload test failed. Network blocked requests entirely.', 'warn');
     } else {
       log(`Upload complete: ${avg.toFixed(1)} Mbps (${mbpsToGbps(avg)} Gbps)`, 'ok');
-      // Update the final gauge to the average speed
-      setGauge(avg); 
+      setGauge(avg);
     }
-    
     return avg;
   }
 
