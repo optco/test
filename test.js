@@ -215,7 +215,7 @@
   // ═══════════════════════════════════════════════════════════
   // XHR-BASED UPLOAD TEST — Real-time upload progress
   // ═══════════════════════════════════════════════════════════
-    async function measureUpload() {
+     async function measureUpload() {
     setPhase('ul');
     log('Starting upload throughput analysis...', 'info');
     speedLabel.textContent = 'UPLOADING';
@@ -229,7 +229,7 @@
     let lastSampleTime = startTime;
     let lastSampleBytes = 0;
     const PARALLEL = 4;
-    const CHUNK_SIZE = 512 * 1024; // 512KB chunks (faster iterations, smoother gauge)
+    const CHUNK_SIZE = 512 * 1024; // 512KB chunks
 
     function startUpload() {
       return new Promise((resolve) => {
@@ -238,13 +238,14 @@
           return;
         }
 
-        // FAST payload generation (prevents UI freeze)
+        // Wrap in Blob for reliable XHR progress events across all browsers
         const data = new Uint8Array(CHUNK_SIZE);
-        data.fill(0x42); 
+        data.fill(0x42);
+        const blob = new Blob([data]);
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `https://speed.cloudflare.com/__up?_=${Math.random()}`, true);
-        xhr.timeout = 4000; // 4 second hard timeout per chunk
+        xhr.timeout = 5000; // 5 second hard timeout per chunk
 
         let prevLoaded = 0;
 
@@ -257,7 +258,7 @@
           if (now - lastSampleTime > 200) {
             const bytesInInterval = totalBytes - lastSampleBytes;
             const timeInInterval = (now - lastSampleTime) / 1000;
-            if (timeInInterval > 0) {
+            if (timeInInterval > 0 && bytesInInterval > 0) {
               const mbps = (bytesInInterval * 8) / (timeInInterval * 1e6);
               samples.push(mbps);
               setGauge(mbps);
@@ -282,12 +283,19 @@
         };
 
         xhr.onloadend = finish;
-        xhr.onerror = finish;
-        xhr.ontimeout = finish; // Prevents infinite hanging
-        
+        xhr.onerror = function() {
+          log('  Upload chunk failed (network/CORS block)', 'warn');
+          finish();
+        };
+        xhr.ontimeout = function() {
+          log('  Upload chunk timed out', 'warn');
+          finish();
+        };
+
         try {
-          xhr.send(data);
+          xhr.send(blob);
         } catch (e) {
+          log('  Upload chunk threw error: ' + e.message, 'warn');
           finish();
         }
       });
@@ -306,8 +314,13 @@
     const sorted = [...samples].sort((a, b) => a - b);
     const trimmed = sorted.slice(Math.floor(sorted.length * 0.1), Math.floor(sorted.length * 0.9));
     const avg = trimmed.length > 0 ? trimmed.reduce((a, b) => a + b, 0) / trimmed.length : 0;
+
+    if (avg === 0 && samples.length === 0) {
+      log('Upload test yielded no data. Check browser console for network blocks.', 'warn');
+    } else {
+      log(`Upload complete: ${avg.toFixed(1)} Mbps (${mbpsToGbps(avg)} Gbps)`, 'ok');
+    }
     
-    log(`Upload complete: ${avg.toFixed(1)} Mbps (${mbpsToGbps(avg)} Gbps)`, 'ok');
     return avg;
   }
 
