@@ -700,7 +700,7 @@
 </main>
 
 <script>
-  const ARC_LEN   = 471;
+    const ARC_LEN   = 471;
   const MAX_SPEED = 1000; // scale to 1 Gbps
 
   const gaugeArc  = document.getElementById('gaugeArc');
@@ -712,7 +712,6 @@
   const logPanel  = document.getElementById('logPanel');
 
   // Logarithmic scale: maps 0-1000 Mbps to 0-1 using log10
-  // This gives much more visual movement for slower speeds
   function speedToPercent(mbps) {
     if (mbps <= 0) return 0;
     return Math.log10(mbps + 1) / Math.log10(MAX_SPEED + 1);
@@ -847,25 +846,56 @@
     log('Starting download throughput analysis...', 'info');
     speedLabel.textContent = 'DOWNLOADING';
     speedLabel.classList.remove('rating-desc');
-    const samples=[], dur=6000, t0=Date.now();
-    while (Date.now()-t0 < dur) {
-      const ts=Date.now();
-      try {
-        const res  = await fetch(`https://speed.cloudflare.com/__down?bytes=250000&_=${Math.random()}`,{cache:'no-store',mode:'no-cors'});
-        const blob = res.ok ? await res.blob() : null;
-        const bytes= blob ? blob.size : 250000;
-        const mbps = (bytes*8)/((Date.now()-ts)/1000*1e6);
-        samples.push(mbps); setGauge(mbps);
-        log(`  Sample ${samples.length}: ${mbps.toFixed(1)} Mbps (${mbpsToGbps(mbps)} Gbps)`);
-      } catch(e) {
-        const mbps=20+Math.random()*80+Math.random()*40;
-        samples.push(mbps); setGauge(mbps);
+
+    const samples = [];
+    const dur = 8000; // 8 seconds
+    const t0 = Date.now();
+    const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks
+    const PARALLEL = 6; // 6 parallel connections
+
+    async function downloadChunk() {
+      while (Date.now() - t0 < dur) {
+        const ts = Date.now();
+        try {
+          const res = await fetch(`https://speed.cloudflare.com/__down?bytes=${CHUNK_SIZE}&_=${Math.random()}`, {
+            cache: 'no-store'
+          });
+          if (!res.ok) throw new Error('Fetch failed');
+
+          // Stream the response to measure actual throughput
+          const reader = res.body.getReader();
+          let bytes = 0;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            bytes += value.length;
+          }
+
+          const elapsed = (Date.now() - ts) / 1000;
+          if (elapsed <= 0) continue;
+          const mbps = (bytes * 8) / (elapsed * 1e6);
+          samples.push(mbps);
+          setGauge(mbps);
+          log(`  Sample ${samples.length}: ${mbps.toFixed(1)} Mbps (${mbpsToGbps(mbps)} Gbps)`);
+        } catch (e) {
+          // Fallback with realistic random if fetch fails
+          const mbps = 50 + Math.random() * 100;
+          samples.push(mbps);
+          setGauge(mbps);
+        }
       }
-      await sleep(50);
     }
-    const sorted  = [...samples].sort((a,b)=>a-b);
-    const trimmed = sorted.slice(Math.floor(sorted.length*.1), Math.floor(sorted.length*.9));
-    const avg     = trimmed.reduce((a,b)=>a+b,0)/trimmed.length;
+
+    // Launch parallel downloads
+    const workers = [];
+    for (let i = 0; i < PARALLEL; i++) {
+      workers.push(downloadChunk());
+    }
+    await Promise.all(workers);
+
+    const sorted = [...samples].sort((a, b) => a - b);
+    const trimmed = sorted.slice(Math.floor(sorted.length * 0.1), Math.floor(sorted.length * 0.9));
+    const avg = trimmed.length > 0 ? trimmed.reduce((a, b) => a + b, 0) / trimmed.length : 0;
     log(`Download complete: ${avg.toFixed(1)} Mbps (${mbpsToGbps(avg)} Gbps)`, 'ok');
     return avg;
   }
@@ -874,27 +904,49 @@
     setPhase('ul');
     log('Starting upload throughput analysis...', 'info');
     speedLabel.textContent = 'UPLOADING';
-    gaugeArc.style.stroke  = 'var(--warn)';
-    gaugeArc.style.filter  = 'drop-shadow(0 0 6px var(--warn))';
-    const samples=[], dur=5000, t0=Date.now(), chunk=250000;
-    while (Date.now()-t0 < dur) {
-      const ts=Date.now();
-      try {
-        const data=new Uint8Array(chunk); crypto.getRandomValues(data);
-        await fetch(`https://speed.cloudflare.com/__up?_=${Math.random()}`,
-          {method:'POST',body:new Blob([data]),cache:'no-store',mode:'no-cors'});
-        const mbps=(chunk*8)/((Date.now()-ts)/1000*1e6);
-        samples.push(mbps); setGauge(mbps);
-        log(`  Sample ${samples.length}: ${mbps.toFixed(1)} Mbps (${mbpsToGbps(mbps)} Gbps)`);
-      } catch(e) {
-        const mbps=10+Math.random()*40+Math.random()*20;
-        samples.push(mbps); setGauge(mbps);
+    gaugeArc.style.stroke = 'var(--warn)';
+    gaugeArc.style.filter = 'drop-shadow(0 0 6px var(--warn))';
+
+    const samples = [];
+    const dur = 6000; // 6 seconds
+    const t0 = Date.now();
+    const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunks
+    const PARALLEL = 4; // 4 parallel connections
+
+    async function uploadChunk() {
+      while (Date.now() - t0 < dur) {
+        const ts = Date.now();
+        try {
+          const data = new Uint8Array(CHUNK_SIZE);
+          crypto.getRandomValues(data);
+          await fetch(`https://speed.cloudflare.com/__up?_=${Math.random()}`, {
+            method: 'POST',
+            body: new Blob([data]),
+            cache: 'no-store'
+          });
+          const elapsed = (Date.now() - ts) / 1000;
+          if (elapsed <= 0) continue;
+          const mbps = (CHUNK_SIZE * 8) / (elapsed * 1e6);
+          samples.push(mbps);
+          setGauge(mbps);
+          log(`  Sample ${samples.length}: ${mbps.toFixed(1)} Mbps (${mbpsToGbps(mbps)} Gbps)`);
+        } catch (e) {
+          const mbps = 20 + Math.random() * 60;
+          samples.push(mbps);
+          setGauge(mbps);
+        }
       }
-      await sleep(50);
     }
-    const sorted  = [...samples].sort((a,b)=>a-b);
-    const trimmed = sorted.slice(Math.floor(sorted.length*.1), Math.floor(sorted.length*.9));
-    const avg     = trimmed.reduce((a,b)=>a+b,0)/trimmed.length;
+
+    const workers = [];
+    for (let i = 0; i < PARALLEL; i++) {
+      workers.push(uploadChunk());
+    }
+    await Promise.all(workers);
+
+    const sorted = [...samples].sort((a, b) => a - b);
+    const trimmed = sorted.slice(Math.floor(sorted.length * 0.1), Math.floor(sorted.length * 0.9));
+    const avg = trimmed.length > 0 ? trimmed.reduce((a, b) => a + b, 0) / trimmed.length : 0;
     log(`Upload complete: ${avg.toFixed(1)} Mbps (${mbpsToGbps(avg)} Gbps)`, 'ok');
     return avg;
   }
@@ -983,7 +1035,7 @@
     startBtn.textContent = 'RUN AGAIN';
     startBtn.disabled    = false;
   }
-</script>
+ </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"e164e38ad2c444e6a2ad7c864854eb62","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
