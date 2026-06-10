@@ -215,9 +215,10 @@
   // ═══════════════════════════════════════════════════════════
   // XHR-BASED UPLOAD TEST — Real-time upload progress
   // ═══════════════════════════════════════════════════════════
-     async function measureUpload() {
+
+  async function measureUpload() {
     setPhase('ul');
-    log('Starting upload throughput analysis (no-cors)...', 'info');
+    log('Starting upload throughput analysis...', 'info');
     speedLabel.textContent = 'UPLOADING';
     gaugeArc.style.stroke = 'var(--warn)';
     gaugeArc.style.filter = 'drop-shadow(0 0 6px var(--warn))';
@@ -228,23 +229,24 @@
     const PARALLEL = 4;
     const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunks
 
+    // REPLACE THIS URL WITH YOUR ACTUAL WORKER URL
+    const UPLOAD_ENDPOINT = 'https://gbps.me/api/upload'; // or your workers.dev URL
+
     async function uploadWorker() {
       while (performance.now() - startTime < duration) {
-        // Generate payload
         const data = new Uint8Array(CHUNK_SIZE);
-        data.fill(0x42); // Fast, synchronous fill
-        const blob = new Blob([data]); 
+        data.fill(0x42); // Fast, non-blocking payload
+        const blob = new Blob([data]);
         const ts = performance.now();
-
+        
         try {
-          // 'no-cors' completely bypasses the OPTIONS preflight that Cloudflare is blocking.
-          // The request goes through as an "opaque" transaction.
-          await fetch(`https://speed.cloudflare.com/__up?_=${Math.random()}`, {
+          const response = await fetch(`${UPLOAD_ENDPOINT}?_=${Math.random()}`, {
             method: 'POST',
             body: blob,
-            cache: 'no-store',
-            mode: 'no-cors' 
+            cache: 'no-store'
           });
+          
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
           
           const elapsed = (performance.now() - ts) / 1000;
           if (elapsed > 0) {
@@ -253,7 +255,8 @@
             setGauge(mbps);
           }
         } catch (e) {
-          // In no-cors, fetch rarely throws unless the network is completely dead.
+          log(`  Upload chunk failed: ${e.message}`, 'warn');
+          break; // Stop this worker to prevent spamming a broken endpoint
         }
       }
     }
@@ -267,14 +270,14 @@
     const avg = trimmed.length > 0 ? trimmed.reduce((a, b) => a + b, 0) / trimmed.length : 0;
 
     if (avg === 0) {
-      log('Upload test failed. Network blocked requests entirely.', 'warn');
+      log('Upload test failed. Check Worker deployment and URL.', 'warn');
     } else {
       log(`Upload complete: ${avg.toFixed(1)} Mbps (${mbpsToGbps(avg)} Gbps)`, 'ok');
-      setGauge(avg);
+      setGauge(avg); 
     }
+    
     return avg;
   }
-
 // ═══════════════════════════════════════════════════════════
   // 
   // ═══════════════════════════════════════════════════════════
