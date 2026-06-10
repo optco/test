@@ -230,7 +230,7 @@
     const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunks
 
     // REPLACE THIS URL WITH YOUR ACTUAL WORKER URL
-    const UPLOAD_ENDPOINT = 'https://gbps.me/api/upload'; // or your workers.dev URL
+    const UPLOAD_ENDPOINT = 'https://api.gbps.me'; // or your workers.dev URL
 
     async function uploadWorker() {
       while (performance.now() - startTime < duration) {
