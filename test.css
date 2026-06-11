@@ -98,15 +98,7 @@
     box-shadow: 0 0 8px var(--accent);
     animation: pulse-dot 2s ease-in-out infinite;
   }
- .status-text {
-      font-size: 11px;
-    color: var(--text-dim);
-    animation: pulse-dot 2s ease-in-out infinite;
-  }
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
+
 
   /* ── MAIN ── */
   main {
