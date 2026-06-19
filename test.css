@@ -83,7 +83,7 @@
 
   .header-status {
     font-size: 11px;
-    color: var(--text-dim);
+    color: var(--text-bright);
     letter-spacing: 1px;
     text-transform: uppercase;
     display: flex;
