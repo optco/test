@@ -26,6 +26,7 @@
 a.glass-btn {
     text-decoration: none;
 }
+  .fixed-center-img { height: 30px; width: auto; display: block; }
 html,body{
   height:100%; font-family:var(--font);
   background: linear-gradient(135deg,#b8d8f8 0%,#c8e8f0 30%,#d0e8ff 60%,#b0cff0 100%);
@@ -177,7 +178,9 @@ html,body{
 <div id="app">
 
   <div id="top-bar">
+    <img src="gbps.png" class="fixed-center-img" alt="gbps.me" />
     <h1><i class="ti ti-world-longitude" aria-hidden="true"></i> Antipode &amp; Timezone Explorer</h1>
+    
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span id="mode-badge">Click 1: drop pin &amp; see antipode &nbsp;·&nbsp; Click 2: compare two points</span>
       <span id="hint" style="display:none;"></span>
