@@ -141,7 +141,25 @@ html,body{
 
 /* Map tweaks */
 .leaflet-container{background:#b5d0ea !important;}
-.leaflet-control-attribution{display:none !important;}
+
+/* Attribution styling - visible but styled to match theme */
+.leaflet-control-attribution{
+  font-size:10px !important;
+  background:rgba(255,255,255,0.7) !important;
+  backdrop-filter:blur(8px) !important;
+  border-radius:6px 0 0 0 !important;
+  padding:2px 6px !important;
+  box-shadow:0 2px 8px rgba(0,0,0,0.1) !important;
+  border:1px solid rgba(255,255,255,0.3) !important;
+}
+.leaflet-control-attribution a{
+  color:var(--accent2) !important;
+  text-decoration:none !important;
+}
+.leaflet-control-attribution a:hover{
+  text-decoration:underline !important;
+}
+
 .leaflet-control-zoom a{
   background:var(--glass-bg2)!important;
   backdrop-filter:blur(10px)!important;
@@ -202,10 +220,15 @@ let tzA = null, tzB = null;
    MAP
 ═══════════════════════════════════════ */
 window.addEventListener('load', () => {
-const map = L.map('map',{zoomControl:true,attributionControl:false,doubleClickZoom:false}).setView([20,0],2);
+const map = L.map('map',{
+  zoomControl:true,
+  attributionControl:true,  // CHANGED: was false, now true
+  doubleClickZoom:false
+}).setView([20,0],2);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  maxZoom:19
+  maxZoom:19,
+  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'  // ADDED: required attribution
 }).addTo(map);
 setTimeout(()=>map.invalidateSize(),300);
 
@@ -575,14 +598,14 @@ canvas.addEventListener('mousedown',e=>{dragging=true;autoSpin=false;dragStartX=
 window.addEventListener('mouseup',()=>{dragging=false;});
 window.addEventListener('mousemove',e=>{
   if(!dragging)return;
-  globeRot=rotStart-(e.clientX-dragStartX)*0.45;
+  globeRot=rotStart+(e.clientX-dragStartX)*0.45;
   updateGlobe();
 });
 canvas.addEventListener('touchstart',e=>{dragging=true;autoSpin=false;dragStartX=e.touches[0].clientX;rotStart=globeRot;},{passive:true});
 window.addEventListener('touchend',()=>{dragging=false;});
 window.addEventListener('touchmove',e=>{
   if(!dragging)return;
-  globeRot=rotStart-(e.touches[0].clientX-dragStartX)*0.45;
+  globeRot=rotStart+(e.touches[0].clientX-dragStartX)*0.45;
   updateGlobe();
 },{passive:true});
 
