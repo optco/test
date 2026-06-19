@@ -477,3 +477,20 @@
     to   { opacity: 1; transform: translateY(0); }
   }
   .animated-val { animation: count-up 0.2s ease-out; }
+.fixed-center-img {
+    /* Fluid height scaling */
+    height: clamp(40px, 8vw, 80px);
+    
+    /* ✅ Proportional width — never stretch/compress */
+    width: auto;
+    
+    /* ✅ Critical for mobile: never exceed viewport width */
+    max-width: 90vw;
+    
+    /* ✅ Ensure padding/margin don't cause overflow */
+    box-sizing: border-box;
+    
+    /* Centering + spacing */
+    display: block;
+    margin: 0 auto 16px;
+}
