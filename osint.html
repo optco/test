@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>gbps.me — OSINT & Cybersecurity Resources</title>
+<meta name="description" content="Curated collection of OSINT tools and cybersecurity resources for reconnaissance, analysis, and threat intelligence." />
+<style>
+  :root {
+    --bg: #0a0b0d;
+    --surface: #111318;
+    --border: #1e2229;
+    --border-bright: #2d333d;
+    --text: #c8cdd6;
+    --text-dim: #4a5060;
+    --text-bright: #e8ecf2;
+    --accent: #00e5a0;
+    --accent-dim: #00b07a;
+    --accent-glow: rgba(0, 229, 160, 0.15);
+    --warn: #ff6b35;
+    --warn-glow: rgba(255, 107, 53, 0.15);
+    --blue: #3d9eff;
+    --blue-glow: rgba(61, 158, 255, 0.15);
+    --purple: #a855f7;
+    --purple-glow: rgba(168, 85, 247, 0.15);
+    --mono: 'Share Tech Mono', monospace;
+    --cond: 'Barlow Condensed', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 16px 60px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, #0a0b0d 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 24px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo {
+    font-family: var(--cond);
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--text-bright);
+    text-transform: lowercase;
+    display: flex;
+    align-items: baseline;
+    gap: 1px;
+  }
+  .logo-gbps { color: var(--accent); }
+  .logo-dot  { color: var(--text-dim); }
+  .logo-me   { color: var(--text-bright); }
+
+  .header-status {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-status a { text-decoration: none; color: inherit; }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  main {
+    width: 100%;
+    max-width: 1200px;
+    position: relative;
+    z-index: 1;
+    margin-top: 48px;
+  }
+
+  .page-title {
+    font-family: var(--cond);
+    font-weight: 700;
+    font-size: 42px;
+    color: var(--text-bright);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-bottom: 48px;
+    max-width: 800px;
+    line-height: 1.6;
+  }
+
+  .category-section {
+    margin-bottom: 56px;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .category-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--accent-glow);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .category-title {
+    font-family: var(--cond);
+    font-weight: 700;
+    font-size: 24px;
+    color: var(--text-bright);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .tool-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--border-bright);
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+
+  .tool-card:hover {
+    border-color: var(--border-bright);
+    box-shadow: 0 0 20px rgba(0, 229, 160, 0.1);
+  }
+
+  .tool-card:hover::before {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .tool-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .tool-name {
+    font-family: var(--cond);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text-bright);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .tool-status {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .status-active {
+    background: var(--accent-glow);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+
+  .status-alternative {
+    background: var(--warn-glow);
+    color: var(--warn);
+    border: 1px solid var(--warn);
+  }
+
+  .tool-link {
+    font-size: 11px;
+    color: var(--accent);
+    text-decoration: none;
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    transition: color 0.2s;
+  }
+
+  .tool-link:hover {
+    color: var(--accent-dim);
+  }
+
+  .tool-description {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .tool-alternative {
+    font-size: 11px;
+    color: var(--text-dim);
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .tool-alternative strong {
+    color: var(--warn);
+  }
+
+  .tool-alternative a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .disclaimer {
+    margin-top: 64px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--warn);
+  }
+
+  .disclaimer-title {
+    font-family: var(--cond);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--warn);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .disclaimer-text {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 768px) {
+    .tools-grid {
+      grid-template-columns: 1fr;
+    }
+    .page-title {
+      font-size: 32px;
+    }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-gbps">gbps</span><span class="logo-dot">.</span><span class="logo-me">me</span>
+  </div>
+  <div class="header-status">
+    <div class="status-dot"></div>
+    <span><a href="https://theattn.com">by theattn.com</a> // OSINT RESOURCES</span>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">OSINT & Cybersecurity Toolkit</h1>
+  <p class="page-subtitle">
+    Curated collection of open-source intelligence tools, reconnaissance frameworks, and cybersecurity utilities 
+    for ethical hacking, threat intelligence, and digital investigations. All tools are for educational and 
+    authorized security testing purposes only.
+  </p>
+
+  <!-- SEARCH ENGINES & RECONNAISSANCE -->
+  <div class="category-section">
+    <div class="category-header">
+      <div class="category-icon">🔍</div>
+      <h2 class="category-title">Search Engines & Reconnaissance</h2>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Shodan</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://www.shodan.io" class="tool-link" target="_blank">→ https://www.shodan.io</a>
+        <p class="tool-description">
+          Search engine for Internet-connected devices. Find servers, cameras, printers, IoT devices, 
+          and vulnerable systems exposed to the internet. Essential for infrastructure reconnaissance.
+        </p>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Censys</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://censys.io" class="tool-link" target="_blank">→ https://censys.io</a>
+        <p class="tool-description">
+          Attack surface management platform. Discover and analyze internet-connected assets, 
+          certificates, and hosts. Advanced search capabilities for security researchers.
+        </p>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Intelligence X</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://intelx.io" class="tool-link" target="_blank">→ https://intelx.io</a>
+        <p class="tool-description">
+          Search engine and data archive. Search through leaks, data breaches, darknet, and public 
+          records. Powerful OSINT tool for finding historical data and compromised credentials.
+        </p>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">FOSSA</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://fossa.com" class="tool-link" target="_blank">→ https://fossa.com</a>
+        <p class="tool-description">
+          Open source dependency tracking and security. Identify vulnerabilities in software 
+          supply chains and third-party components.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- NETWORK SCANNING -->
+  <div class="category-section">
+    <div class="category-header">
+      <div class="category-icon"></div>
+      <h2 class="category-title">Network Scanning & Enumeration</h2>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Maltego</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://www.maltego.com" class="tool-link" target="_blank">→ https://www.maltego.com</a>
+        <p class="tool-description">
+          Graph-based link analysis and data mining tool. Visualize relationships between people, 
+          companies, domains, IPs, and infrastructure. Community edition available.
+        </p>
+        <div class="tool-alternative">
+          <strong>Alternative:</strong> <a href="https://www.spiderfoot.net" target="_blank">SpiderFoot</a> (open-source alternative)
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">SpiderFoot</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://www.spiderfoot.net" class="tool-link" target="_blank">→ https://www.spiderfoot.net</a>
+        <p class="tool-description">
+          Open-source intelligence automation tool. Collect data from over 100 sources for IP addresses, 
+          domains, emails, and more. CLI and web interface available.
+        </p>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Recon-ng</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://github.com/lanmaster53/recon-ng" class="tool-link" target="_blank">→ GitHub Repository</a>
+        <p class="tool-description">
+          Full-featured web reconnaissance framework written in Python. Modular architecture with 
+          numerous modules for gathering information from public sources.
+        </p>
+        <div class="tool-alternative">
+          <strong>Alternative:</strong> <a href="https://github.com/bbot-dev/bbot" target="_blank">BBOT</a> (modern alternative)
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">BBOT</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://github.com/bbot-dev/bbot" class="tool-link" target="_blank">→ GitHub Repository</a>
+        <p class="tool-description">
+          Big Bad Offensive Security Tool. Fast, recursive OSINT scanner and framework. Modern 
+          alternative to Recon-ng with improved speed and automation.
+        </p>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">CloudFox</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://github.com/iadgov/CloudFox" class="tool-link" target="_blank">→ GitHub Repository</a>
+        <p class="tool-description">
+          AWS and cloud infrastructure enumeration tool. Automate cloud security assessments and 
+          identify misconfigurations in AWS, Azure, and GCP environments.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOCIAL MEDIA OSINT -->
+  <div class="category-section">
+    <div class="category-header">
+      <div class="category-icon">👤</div>
+      <h2 class="category-title">Social Media & Identity OSINT</h2>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Sherlock</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://github.com/sherlock-project/sherlock" class="tool-link" target="_blank">→ GitHub Repository</a>
+        <p class="tool-description">
+          Find usernames across social networks. Search for accounts by username across 300+ 
+          social media platforms. Essential for digital footprint analysis.
+        </p>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">PhoneInfoga</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://github.com/sundowndev/PhoneInfoga" class="tool-link" target="_blank">→ GitHub Repository</a>
+        <p class="tool-description">
+          Advanced phone number reconnaissance tool. Gather information about phone numbers using 
+          various search engines and APIs. Web interface and CLI available.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- VULNERABILITY SCANNING -->
+  <div class="category-section">
+    <div class="category-header">
+      <div class="category-icon">⚡</div>
+      <h2 class="category-title">Vulnerability Scanning & Testing</h2>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Nuclei</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://github.com/projectdiscovery/nuclei" class="tool-link" target="_blank">→ GitHub Repository</a>
+        <p class="tool-description">
+          Fast, customizable vulnerability scanner. Template-based scanning for web applications, 
+          networks, and cloud infrastructure. Large community template library.
+        </p>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Burp Suite</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://portswigger.net/burp" class="tool-link" target="_blank">→ https://portswigger.net/burp</a>
+        <p class="tool-description">
+          Industry-standard web application security testing tool. Intercept, analyze, and modify 
+          web traffic. Community (free) and Professional editions available.
+        </p>
+        <div class="tool-alternative">
+          <strong>Free Alternative:</strong> <a href="https://caido.io" target="_blank">Caido</a> (lightweight alternative)
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Caido</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://caido.io" class="tool-link" target="_blank">→ https://caido.io</a>
+        <p class="tool-description">
+          Lightweight web security testing platform. Modern alternative to Burp Suite with focus 
+          on speed and simplicity. Web proxy and vulnerability scanner.
+        </p>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">BloodHound</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://github.com/BloodHoundAD/BloodHound" class="tool-link" target="_blank">→ GitHub Repository</a>
+        <p class="tool-description">
+          Active Directory attack path analysis. Visualize and identify complex attack paths in 
+          AD environments. Essential for red team operations and AD security assessments.
+        </p>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Evilginx3</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://github.com/gophish/evilginx" class="tool-link" target="_blank">→ GitHub Repository</a>
+        <p class="tool-description">
+          Advanced phishing framework with MFA bypass capabilities. Create man-in-the-middle 
+          phishing attacks that capture credentials and session cookies.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYSIS TOOLS -->
+  <div class="category-section">
+    <div class="category-header">
+      <div class="category-icon">🔬</div>
+      <h2 class="category-title">Analysis & Decoding Tools</h2>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">CyberChef</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://gchq.github.io/CyberChef" class="tool-link" target="_blank">→ https://gchq.github.io/CyberChef</a>
+        <p class="tool-description">
+          "Cyber Swiss Army Knife" for encoding, decoding, and data analysis. Hundreds of 
+          operations for cryptography, compression, and data transformation. Runs in browser.
+        </p>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">EXIF Search</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://exif.tools" class="tool-link" target="_blank">→ https://exif.tools</a>
+        <p class="tool-description">
+          Extract metadata from images and documents. Find GPS coordinates, camera info, 
+          software used, and hidden data in file metadata.
+        </p>
+        <div class="tool-alternative">
+          <strong>Alternative:</strong> <a href="https://www.exifdata.com" target="_blank">ExifData.com</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DARK WEB SEARCH -->
+  <div class="category-section">
+    <div class="category-header">
+      <div class="category-icon">🌑</div>
+      <h2 class="category-title">Dark Web Search Engines</h2>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Ahmia</div>
+          <span class="tool-status status-active">Active</span>
+        </div>
+        <a href="https://ahmia.fi" class="tool-link" target="_blank">→ https://ahmia.fi</a>
+        <p class="tool-description">
+          Search engine for Tor hidden services. Index .onion sites with focus on safety and 
+          removing abuse content. Clearnet interface to search dark web content.
+        </p>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Torch</div>
+          <span class="tool-status status-alternative">Unstable</span>
+        </div>
+        <a href="http://xmh57jrknzkhv6y3ls3ubitzfqnkrwxhopf5aygthi7d6rplyvk3noyd.onion" class="tool-link" target="_blank">→ Tor Hidden Service (.onion)</a>
+        <p class="tool-description">
+          One of the oldest Tor search engines. Index thousands of .onion sites. Note: Requires 
+          Tor Browser to access. Availability varies frequently.
+        </p>
+        <div class="tool-alternative">
+          <strong>Alternatives:</strong> <a href="https://ahmia.fi" target="_blank">Ahmia</a> (more stable), 
+          <a href="https://dark.fail" target="_blank">Dark.fail</a> (directory)
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-header">
+          <div class="tool-name">Grams</div>
+          <span class="tool-status status-alternative">Offline</span>
+        </div>
+        <div class="tool-link" style="color: var(--text-dim);">→ Service No Longer Available</div>
+        <p class="tool-description">
+          Dark web search engine (discontinued). Was popular for searching darknet markets and 
+          hidden services.
+        </p>
+        <div class="tool-alternative">
+          <strong>Alternatives:</strong> <a href="https://ahmia.fi" target="_blank">Ahmia</a>, 
+          <a href="https://intelx.io" target="_blank">Intelligence X</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <div class="disclaimer-title">⚠️ Legal Disclaimer</div>
+    <p class="disclaimer-text">
+      These tools are provided for educational purposes, authorized security testing, and ethical 
+      hacking only. Always obtain proper authorization before scanning, testing, or accessing systems 
+      you do not own or have explicit permission to test. Unauthorized access to computer systems is 
+      illegal in most jurisdictions. The creators of this resource page are not responsible for misuse 
+      of these tools. Use responsibly and ethically.
+    </p>
+  </div>
+</main>
+
+</body>
+</html>
