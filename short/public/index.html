@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBPS Link Shortener</title>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body>
+    <h1>Shorten your link</h1>
+    <input type="url" id="longUrl" placeholder="https://example.com/very-long-url" required style="width: 300px; padding: 8px;">
+    
+    <!-- Replace 'your-site-key' with your actual Cloudflare Turnstile Site Key -->
+    <div class="cf-turnstile" data-sitekey="your-site-key" data-callback="onTurnstileSuccess"></div>
+    
+    <button id="submitBtn" onclick="shorten()" disabled>Shorten</button>
+    <p id="result"></p>
+
+    <script>
+        let turnstileToken = '';
+        function onTurnstileSuccess(token) {
+            turnstileToken = token;
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        async function shorten() {
+            const longUrl = document.getElementById('longUrl').value;
+            const resultEl = document.getElementById('result');
+            resultEl.innerText = 'Processing...';
+
+            try {
+                const res = await fetch('/api/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: longUrl, token: turnstileToken })
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    resultEl.innerText = `Short link: ${data.shortUrl}`;
+                } else {
+                    resultEl.innerText = `Error: ${data.error}`;
+                }
+            } catch (err) {
+                resultEl.innerText = 'Network error. Try again.';
+            }
+        }
+    </script>
+</body>
+</html>
