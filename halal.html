@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Halal Stay — Muslim-Friendly Lodging in South Africa</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg-deep: #050d18;
+      --bg-mid: #0a1628;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --glass-shine: rgba(255, 255, 255, 0.08);
+      --liquid-1: rgba(16, 100, 80, 0.35);
+      --liquid-2: rgba(20, 60, 120, 0.3);
+      --liquid-3: rgba(80, 30, 100, 0.2);
+      --accent: #3ecf8e;
+      --accent-soft: rgba(62, 207, 142, 0.15);
+      --accent-glow: rgba(62, 207, 142, 0.4);
+      --gold: #c9a84c;
+      --gold-soft: rgba(201, 168, 76, 0.15);
+      --text-primary: rgba(255,255,255,0.93);
+      --text-secondary: rgba(255,255,255,0.55);
+      --text-muted: rgba(255,255,255,0.35);
+      --radius: 18px;
+      --radius-sm: 10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Ambient orbs ── */
+    .orb-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.55;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .orb-1 { width: 600px; height: 600px; top: -150px; left: -100px; background: var(--liquid-1); animation-delay: 0s; }
+    .orb-2 { width: 500px; height: 500px; bottom: -100px; right: -80px; background: var(--liquid-2); animation-delay: -6s; }
+    .orb-3 { width: 350px; height: 350px; top: 40%; left: 45%; background: var(--liquid-3); animation-delay: -12s; }
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(40px, 30px) scale(1.08); }
+    }
+
+    /* ── Main content ── */
+    .content { position: relative; z-index: 1; }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      background: rgba(5, 13, 24, 0.6);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--accent), #1a8f60);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #fff;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+    .logo-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.5px;
+    }
+    .logo-sub {
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .nav-pill {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 50px;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(10px);
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 80px 40px 60px;
+      text-align: center;
+      position: relative;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gold-soft);
+      border: 1px solid rgba(201,168,76,0.3);
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-size: 11px;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 500;
+      margin-bottom: 28px;
+    }
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(42px, 6vw, 72px);
+      font-weight: 600;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+    .hero-title em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .hero-desc {
+      max-width: 560px;
+      margin: 0 auto 44px;
+      color: var(--text-secondary);
+      font-size: 16px;
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    /* ── Controls Bar ── */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 0 40px 50px;
+    }
+
+    .glass-select {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 50px;
+      padding: 12px 20px 12px 16px;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+      min-width: 200px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .glass-select:focus, .glass-select:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-glow);
+    }
+    .glass-select option { background: #0d1f35; color: #fff; }
+
+    .ctrl-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 50px;
+      padding: 12px 20px;
+      color: var(--text-secondary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .ctrl-btn:hover, .ctrl-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+    .ctrl-btn i { font-size: 13px; }
+
+    .locate-btn {
+      background: linear-gradient(135deg, rgba(62,207,142,0.2), rgba(62,207,142,0.08));
+      border-color: rgba(62,207,142,0.4);
+      color: var(--accent);
+    }
+    .locate-btn:hover {
+      background: linear-gradient(135deg, rgba(62,207,142,0.3), rgba(62,207,142,0.15));
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    /* ── View toggle ── */
+    .view-toggle {
+      display: flex;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 50px;
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+    }
+    .view-btn {
+      padding: 10px 18px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .view-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50px;
+      margin: 3px;
+    }
+
+    /* ── Results info ── */
+    .results-info {
+      text-align: center;
+      padding: 0 40px 24px;
+      color: var(--text-muted);
+      font-size: 13px;
+      letter-spacing: 0.3px;
+    }
+    .results-info strong { color: var(--accent); }
+
+    /* ── Map View ── */
+    #map-container {
+      margin: 0 40px 60px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 0 60px rgba(62,207,142,0.1), inset 0 1px 0 var(--glass-shine);
+      height: 520px;
+      display: none;
+    }
+    #map { height: 100%; width: 100%; }
+
+    /* ── Grid View ── */
+    #grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 24px;
+      padding: 0 40px 80px;
+    }
+
+    /* ── Cards ── */
+    .property-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      position: relative;
+      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 var(--glass-shine);
+    }
+    .property-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+      pointer-events: none;
+      border-radius: var(--radius);
+    }
+    .property-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 24px var(--accent-glow);
+      border-color: rgba(62,207,142,0.3);
+    }
+
+    .card-header {
+      padding: 24px 24px 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 50px;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .card-type-badge i { color: var(--accent); font-size: 10px; }
+
+    .halal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 50px;
+      padding: 4px 11px;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .halal-dedicated { background: rgba(62,207,142,0.18); color: #3ecf8e; border: 1px solid rgba(62,207,142,0.35); }
+    .halal-self { background: rgba(100,160,255,0.15); color: #7ab4ff; border: 1px solid rgba(100,160,255,0.3); }
+    .halal-onsite { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+    .halal-request { background: rgba(200,120,60,0.15); color: #e8a56a; border: 1px solid rgba(200,120,60,0.3); }
+
+    .card-body { padding: 18px 24px 24px; }
+
+    .card-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 600;
+      line-height: 1.25;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .card-location {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-bottom: 14px;
+    }
+    .card-location i { color: var(--accent); font-size: 11px; }
+
+    .card-desc {
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--text-secondary);
+      font-weight: 300;
+    }
+
+    .card-footer {
+      padding: 0 24px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-province {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .card-province i { color: var(--gold); }
+
+    .map-link-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(62,207,142,0.25);
+      border-radius: 50px;
+      padding: 7px 14px;
+      font-size: 12px;
+      color: var(--accent);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      font-family: 'Inter', sans-serif;
+    }
+    .map-link-btn:hover {
+      background: rgba(62,207,142,0.25);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    /* ── Stats ── */
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 0 40px 50px;
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      padding: 20px 40px;
+      text-align: center;
+      border-right: 1px solid var(--glass-border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state i { font-size: 40px; margin-bottom: 16px; display: block; color: var(--text-muted); }
+    .empty-state h3 { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: var(--text-secondary); margin-bottom: 8px; }
+
+    /* ── Nearby notice ── */
+    .nearby-notice {
+      text-align: center;
+      padding: 0 40px 28px;
+      display: none;
+    }
+    .notice-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(62,207,142,0.1);
+      border: 1px solid rgba(62,207,142,0.3);
+      border-radius: 50px;
+      padding: 10px 20px;
+      font-size: 13px;
+      color: var(--accent);
+    }
+    .notice-pill button {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0;
+      font-size: 12px;
+      margin-left: 4px;
+    }
+    .notice-pill button:hover { color: var(--text-primary); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--glass-border);
+      padding: 32px 40px;
+      text-align: center;
+      background: rgba(5,13,24,0.5);
+      backdrop-filter: blur(10px);
+    }
+    footer p { color: var(--text-muted); font-size: 12px; line-height: 1.7; }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer .footer-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    /* ── Leaflet overrides ── */
+    .leaflet-container { background: #0d1f35; }
+    .leaflet-popup-content-wrapper {
+      background: rgba(10,22,40,0.95) !important;
+      backdrop-filter: blur(20px) !important;
+      border: 1px solid var(--glass-border) !important;
+      border-radius: 14px !important;
+      color: var(--text-primary) !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+    }
+    .leaflet-popup-tip { background: rgba(10,22,40,0.95) !important; }
+    .leaflet-popup-content { margin: 14px 16px !important; }
+    .popup-name { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+    .popup-loc { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+    .popup-halal { font-size: 11px; color: var(--accent); }
+
+    /* ── Loading spinner ── */
+    .locate-spinner { display: none; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      nav { padding: 16px 20px; }
+      .hero { padding: 50px 20px 40px; }
+      .controls { padding: 0 20px 36px; gap: 8px; }
+      #grid-container { grid-template-columns: 1fr; padding: 0 20px 60px; }
+      #map-container { margin: 0 20px 40px; height: 380px; }
+      .stats-bar { gap: 0; }
+      .stat-item { padding: 16px 24px; }
+      footer { padding: 24px 20px; }
+      .results-info, .nearby-notice { padding-left: 20px; padding-right: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="orb-layer">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<div class="content">
+
+  <!-- Nav -->
+  <nav>
+    <a href="#" class="logo">
+      <div class="logo-icon"><i class="fas fa-moon"></i></div>
+      <div class="logo-text">
+        <span class="logo-title">Halal Stay</span>
+        <span class="logo-sub">South Africa</span>
+      </div>
+    </a>
+    <div class="nav-pill"><i class="fas fa-shield-halved" style="color:var(--accent);margin-right:6px;"></i>Muslim-Friendly Verified</div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge"><i class="fas fa-star-and-crescent"></i> Halal Travel Made Simple</div>
+    <h1 class="hero-title">Rest Easy,<br>Stay <em>Halal</em></h1>
+    <p class="hero-desc">Discover lodges, resorts, and safari retreats across South Africa that accommodate Muslim travellers — from dedicated halal kitchens to fully self-catering estates.</p>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num" id="stat-total">8</div>
+      <div class="stat-label">Properties</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat-provinces">5</div>
+      <div class="stat-label">Provinces</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">4</div>
+      <div class="stat-label">Halal Types</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">1</div>
+      <div class="stat-label">Dedicated Kitchen</div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <select class="glass-select" id="province-select">
+      <option value="">All Provinces</option>
+    </select>
+
+    <select class="glass-select" id="type-select">
+      <option value="">All Halal Types</option>
+      <option value="Strictly Self-Catering">Self-Catering</option>
+      <option value="Self-Catering / Halal Options On-Site">Halal Options On-Site</option>
+      <option value="Dedicated Halal Kitchen On-Site">Dedicated Halal Kitchen</option>
+      <option value="Catered on Request (Prior Notice Required)">Catered on Request</option>
+    </select>
+
+    <button class="ctrl-btn locate-btn" id="locate-btn" onclick="locateUser()">
+      <i class="fas fa-location-crosshairs" id="locate-icon"></i>
+      <i class="fas fa-circle-notch locate-spinner" id="locate-spinner"></i>
+      <span id="locate-label">Locate Me</span>
+    </button>
+
+    <div class="view-toggle">
+      <button class="view-btn active" id="btn-grid" onclick="setView('grid')">
+        <i class="fas fa-grid-2"></i> List
+      </button>
+      <button class="view-btn" id="btn-map" onclick="setView('map')">
+        <i class="fas fa-map"></i> Map
+      </button>
+    </div>
+  </div>
+
+  <!-- Nearby Notice -->
+  <div class="nearby-notice" id="nearby-notice">
+    <div class="notice-pill">
+      <i class="fas fa-location-dot"></i>
+      <span id="nearby-text">Showing properties nearest to you</span>
+      <button onclick="clearLocate()" title="Clear"><i class="fas fa-xmark"></i></button>
+    </div>
+  </div>
+
+  <!-- Results info -->
+  <div class="results-info" id="results-info"></div>
+
+  <!-- Map -->
+  <div id="map-container">
+    <div id="map"></div>
+  </div>
+
+  <!-- Grid -->
+  <div id="grid-container"></div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-logo"><i class="fas fa-moon"></i> akhtar.co.za/halal</div>
+    <p>Curated halal-friendly lodging across South Africa.<br>Always confirm halal arrangements directly with the property before booking.<br><span style="color:var(--glass-border)">——</span><br>
+    <a href="mailto:info@halalstay.co.za">info@akhtar.co.za</a> &nbsp;·&nbsp; &copy; 2026 Akhtar</p>
+  </footer>
+
+</div>
+
+<script src="halal/stay.js"></script>
+<script>
+  let currentView = 'grid';
+  let leafletMap = null;
+  let markers = [];
+  let filteredData = [];
+  let userCoords = null;
+  let sortByDistance = false;
+
+  // ── Halal type → CSS class & icon ──
+  function getHalalMeta(type) {
+    if (type.includes('Dedicated')) return { cls: 'halal-dedicated', icon: 'fa-check-double', short: 'Dedicated Kitchen' };
+    if (type.includes('Self-Catering / Halal')) return { cls: 'halal-onsite', icon: 'fa-utensils', short: 'Halal Options On-Site' };
+    if (type.includes('Strictly Self-Catering')) return { cls: 'halal-self', icon: 'fa-house-chimney', short: 'Self-Catering' };
+    return { cls: 'halal-request', icon: 'fa-phone', short: 'On Request' };
+  }
+
+  // ── Property type → icon ──
+  function getTypeIcon(type) {
+    const t = type.toLowerCase();
+    if (t.includes('safari') || t.includes('game') || t.includes('lodge')) return 'fa-paw';
+    if (t.includes('mountain') || t.includes('alpine')) return 'fa-mountain';
+    if (t.includes('coastal') || t.includes('beach') || t.includes('eco')) return 'fa-water';
+    if (t.includes('resort')) return 'fa-umbrella-beach';
+    if (t.includes('nature') || t.includes('wilderness')) return 'fa-tree';
+    return 'fa-building';
+  }
+
+  // ── Haversine distance ──
+  function distKm(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  // ── Populate province dropdown ──
+  function populateProvinces() {
+    const sel = document.getElementById('province-select');
+    const provinces = [...new Set(HALAL_GETAWAYS.map(p => p.province))].sort();
+    provinces.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p; opt.textContent = p;
+      sel.appendChild(opt);
+    });
+  }
+
+  // ── Filter logic ──
+  function getFiltered() {
+    const province = document.getElementById('province-select').value;
+    const type = document.getElementById('type-select').value;
+    let data = HALAL_GETAWAYS.filter(p => {
+      if (province && p.province !== province) return false;
+      if (type && !p.halalType.includes(type.split(' ')[0])) return false;
+      return true;
+    });
+    if (sortByDistance && userCoords) {
+      data = data.map(p => ({ ...p, _dist: distKm(userCoords.lat, userCoords.lng, p.lat, p.lng) }))
+                 .sort((a, b) => a._dist - b._dist);
+    }
+    return data;
+  }
+
+  // ── Render grid ──
+  function renderGrid(data) {
+    const container = document.getElementById('grid-container');
+    if (!data.length) {
+      container.innerHTML = `<div class="empty-state"><i class="fas fa-magnifying-glass"></i><h3>No properties found</h3><p>Try adjusting your filters.</p></div>`;
+      return;
+    }
+    container.innerHTML = data.map(p => {
+      const hm = getHalalMeta(p.halalType);
+      const ti = getTypeIcon(p.type);
+      const dist = p._dist ? `<span style="color:var(--accent);font-size:11px;"><i class="fas fa-location-arrow"></i> ${Math.round(p._dist)} km away</span>` : '';
+      return `
+      <div class="property-card">
+        <div class="card-header">
+          <span class="card-type-badge"><i class="fas ${ti}"></i> ${p.type}</span>
+          <span class="halal-badge ${hm.cls}"><i class="fas ${hm.icon}"></i> ${hm.short}</span>
+        </div>
+        <div class="card-body">
+          <div class="card-name">${p.name}</div>
+          <div class="card-location"><i class="fas fa-location-dot"></i>${p.location}${dist ? '&ensp;' + dist : ''}</div>
+          <p class="card-desc">${p.description}</p>
+        </div>
+        <div class="card-footer">
+          <div class="card-province"><i class="fas fa-map"></i>${p.province}</div>
+          <a class="map-link-btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.location + ' South Africa')}" target="_blank">
+            <i class="fas fa-diamond-turn-right"></i> Directions
+          </a>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Render map ──
+  function renderMap(data) {
+    if (!leafletMap) {
+      leafletMap = L.map('map', {
+        center: [-29, 25],
+        zoom: 6,
+        zoomControl: true,
+      });
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        maxZoom: 19
+      }).addTo(leafletMap);
+    }
+
+    // Clear old markers
+    markers.forEach(m => m.remove());
+    markers = [];
+
+    const customIcon = L.divIcon({
+      html: `<div style="
+        width:34px;height:34px;border-radius:50%;
+        background:linear-gradient(135deg,#3ecf8e,#1a8f60);
+        border:2px solid rgba(62,207,142,0.5);
+        display:flex;align-items:center;justify-content:center;
+        box-shadow:0 0 14px rgba(62,207,142,0.6);
+        font-size:14px;color:#fff;
+      "><i class='fas fa-moon'></i></div>`,
+      className: '',
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      popupAnchor: [0, -20]
+    });
+
+    data.forEach(p => {
+      const hm = getHalalMeta(p.halalType);
+      const dist = p._dist ? `<br><span style='color:var(--accent);font-size:11px;'><i class='fas fa-location-arrow'></i> ${Math.round(p._dist)} km away</span>` : '';
+      const popup = `
+        <div class='popup-name'>${p.name}</div>
+        <div class='popup-loc'><i class='fas fa-location-dot' style='color:var(--accent);margin-right:4px;'></i>${p.location}, ${p.province}${dist}</div>
+        <div class='popup-halal'><i class='fas ${hm.icon}' style='margin-right:4px;'></i>${p.halalType}</div>
+      `;
+      const m = L.marker([p.lat, p.lng], { icon: customIcon })
+        .addTo(leafletMap)
+        .bindPopup(popup, { maxWidth: 240 });
+      markers.push(m);
+    });
+
+    if (userCoords) {
+      const userIcon = L.divIcon({
+        html: `<div style="
+          width:18px;height:18px;border-radius:50%;
+          background:#3ecf8e;border:3px solid #fff;
+          box-shadow:0 0 0 4px rgba(62,207,142,0.3);
+        "></div>`,
+        className: '',
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+      const um = L.marker([userCoords.lat, userCoords.lng], { icon: userIcon })
+        .addTo(leafletMap)
+        .bindPopup("<div style='font-size:13px;'>📍 <strong>You are here</strong></div>");
+      markers.push(um);
+    }
+
+    if (data.length) {
+      const bounds = L.latLngBounds(data.map(p => [p.lat, p.lng]));
+      if (userCoords) bounds.extend([userCoords.lat, userCoords.lng]);
+      leafletMap.fitBounds(bounds, { padding: [40, 40] });
+    }
+
+    setTimeout(() => leafletMap.invalidateSize(), 100);
+  }
+
+  // ── Update all ──
+  function update() {
+    filteredData = getFiltered();
+    const count = filteredData.length;
+    document.getElementById('results-info').innerHTML =
+      `Showing <strong>${count}</strong> propert${count === 1 ? 'y' : 'ies'}${document.getElementById('province-select').value ? ' in <strong>' + document.getElementById('province-select').value + '</strong>' : ''}`;
+
+    if (currentView === 'grid') {
+      renderGrid(filteredData);
+    } else {
+      renderMap(filteredData);
+    }
+  }
+
+  // ── View switch ──
+  function setView(view) {
+    currentView = view;
+    document.getElementById('map-container').style.display = view === 'map' ? 'block' : 'none';
+    document.getElementById('grid-container').style.display = view === 'grid' ? 'grid' : 'none';
+    document.getElementById('btn-grid').classList.toggle('active', view === 'grid');
+    document.getElementById('btn-map').classList.toggle('active', view === 'map');
+    if (view === 'map') renderMap(filteredData);
+  }
+
+  // ── Locate Me ──
+  function locateUser() {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    const btn = document.getElementById('locate-btn');
+    document.getElementById('locate-icon').style.display = 'none';
+    document.getElementById('locate-spinner').style.display = 'inline-block';
+    document.getElementById('locate-label').textContent = 'Locating…';
+    btn.disabled = true;
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        sortByDistance = true;
+        document.getElementById('locate-icon').style.display = 'inline-block';
+        document.getElementById('locate-spinner').style.display = 'none';
+        document.getElementById('locate-label').textContent = 'Located';
+        btn.classList.add('active');
+        btn.disabled = false;
+        document.getElementById('nearby-notice').style.display = 'block';
+
+        const nearest = HALAL_GETAWAYS.map(p => ({ ...p, _dist: distKm(userCoords.lat, userCoords.lng, p.lat, p.lng) }))
+          .sort((a, b) => a._dist - b._dist);
+        document.getElementById('nearby-text').textContent =
+          `Nearest: ${nearest[0].name} (${Math.round(nearest[0]._dist)} km)`;
+
+        update();
+        if (currentView !== 'map') setView('map');
+      },
+      err => {
+        document.getElementById('locate-icon').style.display = 'inline-block';
+        document.getElementById('locate-spinner').style.display = 'none';
+        document.getElementById('locate-label').textContent = 'Locate Me';
+        btn.disabled = false;
+        alert('Unable to retrieve your location. Please allow location access.');
+      }
+    );
+  }
+
+  function clearLocate() {
+    userCoords = null;
+    sortByDistance = false;
+    document.getElementById('locate-btn').classList.remove('active');
+    document.getElementById('locate-label').textContent = 'Locate Me';
+    document.getElementById('nearby-notice').style.display = 'none';
+    update();
+  }
+
+  // ── Type filter fix — match partial ──
+  document.getElementById('type-select').addEventListener('change', function() {
+    const val = this.value;
+    // Override filter to exact match
+    update();
+  });
+
+  // Fix filter to handle exact halalType matching
+  const origGetFiltered = getFiltered;
+
+  // ── Init ──
+  populateProvinces();
+  document.getElementById('province-select').addEventListener('change', update);
+  document.getElementById('type-select').addEventListener('change', update);
+
+  // Override type filter for exact match
+  window.getFiltered = function() {
+    const province = document.getElementById('province-select').value;
+    const type = document.getElementById('type-select').value;
+    let data = HALAL_GETAWAYS.filter(p => {
+      if (province && p.province !== province) return false;
+      if (type && p.halalType !== type) return false;
+      return true;
+    });
+    if (sortByDistance && userCoords) {
+      data = data.map(p => ({ ...p, _dist: distKm(userCoords.lat, userCoords.lng, p.lat, p.lng) }))
+                 .sort((a, b) => a._dist - b._dist);
+    }
+    return data;
+  };
+
+  // Re-bind update to use overridden getFiltered
+  function update() {
+    filteredData = window.getFiltered();
+    const count = filteredData.length;
+    const prov = document.getElementById('province-select').value;
+    document.getElementById('results-info').innerHTML =
+      `Showing <strong>${count}</strong> propert${count === 1 ? 'y' : 'ies'}${prov ? ' in <strong>' + prov + '</strong>' : ' across South Africa'}`;
+    if (currentView === 'grid') {
+      renderGrid(filteredData);
+    } else {
+      renderMap(filteredData);
+    }
+  }
+
+  document.getElementById('province-select').addEventListener('change', update);
+  document.getElementById('type-select').addEventListener('change', update);
+
+  update();
+</script>
+</body>
+</html>

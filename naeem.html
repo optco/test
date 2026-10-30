@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	 <link rel="apple-touch-icon" sizes="180x180" href="favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicons/favicon-16x16.png">
+<link rel="manifest" href="favicons/site.webmanifest">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Naeem Akhtar — PAK Cargo Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+   :root {
+  /* Milky white liquid glass theme */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.92);
+  --glass-shadow: 0 8px 32px rgba(30, 58, 80, 0.06);
+  --accent-primary: #dc2626;
+  --accent-secondary: #2563eb;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --card-radius: 20px;
+  --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 40%, #f1f5f9 100%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Soft milky liquid background blobs */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  z-index: -1;
+  opacity: 0.5;
+  animation: float 22s infinite ease-in-out;
+}
+
+body::before {
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.06), transparent 75%);
+  top: -300px;
+  right: -200px;
+  animation-delay: 0s;
+}
+
+body::after {
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.06), transparent 75%);
+  bottom: -250px;
+  left: -200px;
+  animation-delay: -11s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(40px, -25px) scale(1.06); }
+  50% { transform: translate(-25px, 40px) scale(0.96); }
+  75% { transform: translate(25px, 25px) scale(1.03); }
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.profile-header {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--card-radius);
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.8rem;
+  align-items: center;
+  transition: var(--transition);
+}
+
+.profile-header:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 52px rgba(30, 58, 80, 0.1);
+}
+
+.avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(37, 99, 235, 0.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  border: 3px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 4px 24px rgba(30, 58, 80, 0.08);
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.avatar:hover {
+  transform: scale(1.04);
+  border-color: rgba(15, 23, 42, 0.25);
+  box-shadow: 0 6px 32px rgba(30, 58, 80, 0.14);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-info h1 {
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+  color: var(--text-primary);
+}
+
+.profile-title {
+  font-size: 1.25rem;
+  color: var(--accent-secondary);
+  font-weight: 500;
+  margin-bottom: 0.6rem;
+}
+
+.profile-company {
+  font-size: 1.05rem;
+  color: var(--accent-primary);
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+
+.profile-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.profile-location svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
+  color: var(--text-muted);
+}
+
+.profile-summary {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  max-width: 650px;
+  line-height: 1.7;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.7rem 1.4rem;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-primary), #b91c1c);
+  color: white;
+  box-shadow: 0 4px 18px rgba(220, 38, 38, 0.28);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 26px rgba(220, 38, 38, 0.42);
+}
+
+.btn-outline {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(15, 23, 42, 0.18);
+  color: var(--text-primary);
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(30, 58, 80, 0.08);
+}
+
+.section {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--card-radius);
+  padding: 1.8rem 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: var(--transition);
+}
+
+.section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 44px rgba(30, 58, 80, 0.1);
+}
+
+.section-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 1.4rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--text-primary);
+}
+
+.section-title svg {
+  width: 22px;
+  height: 22px;
+  color: var(--accent-secondary);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.2rem;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.82);
+  padding: 1.5rem;
+  border-radius: 14px;
+  text-align: center;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  transition: var(--transition);
+}
+
+.stat-card:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--accent-primary);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(30, 58, 80, 0.08);
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.service-card {
+  background: rgba(255, 255, 255, 0.82);
+  padding: 1.3rem;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  transition: var(--transition);
+}
+
+.service-card:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--accent-secondary);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(30, 58, 80, 0.08);
+}
+
+.service-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.service-desc {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.contact-card {
+  background: rgba(255, 255, 255, 0.82);
+  padding: 1.2rem;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  transition: var(--transition);
+}
+
+.contact-card:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(30, 58, 80, 0.08);
+}
+
+.contact-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contact-icon svg {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+.contact-details h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  color: var(--text-primary);
+}
+
+.contact-details p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.vision-box {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.08), rgba(37, 99, 235, 0.08));
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 14px;
+  padding: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.vision-box h3 {
+  font-size: 1.3rem;
+  margin-bottom: 0.8rem;
+  color: var(--text-primary);
+}
+
+.vision-box p {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.profile-footer {
+  text-align: center;
+  padding: 2rem 1rem 3rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.profile-footer a {
+  color: var(--accent-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.profile-footer a:hover {
+  color: var(--accent-primary);
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .profile-header {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: 2rem 1.5rem;
+  }
+
+  .avatar {
+    margin: 0 auto;
+  }
+
+  .cta-buttons {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 1rem;
+  }
+
+  .profile-header,
+  .section {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .profile-info h1 {
+    font-size: 1.8rem;
+  }
+
+  .skills-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-header,
+.section {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.section:nth-child(2) { animation-delay: 0.1s; }
+.section:nth-child(3) { animation-delay: 0.2s; }
+.section:nth-child(4) { animation-delay: 0.3s; }
+.section:nth-child(5) { animation-delay: 0.4s; }
+
+/* Print/PDF styles for white background export */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .profile-header,
+  .section,
+  .stat-card,
+  .service-card,
+  .contact-card {
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+  .cta-buttons,
+  .btn,
+  body::before,
+  body::after {
+    display: none !important;
+  }
+  .page-loader {
+    position: fixed;
+    inset: 0;
+    background: #07142a;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  }
+  .page-loader.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .loader-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .loader-title {
+    font-family: 'Cormorant Garamond', system-ui, serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .loader-title em {
+    color: #c8902a;
+    font-style: normal;
+  }
+  .loader-text {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.05em;
+    min-height: 1.2em;
+  }
+  .dot-anim {
+    display: inline-block;
+    animation: dotPulse 1.4s infinite;
+  }
+  @keyframes dotPulse {
+    0%, 20% { opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { opacity: 0.3; }
+  }
+  
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <header class="profile-header">
+      <div class="avatar">
+        <img src="https://pakcargohub.co.uk/Pak%20Cargo%20Hub%20UK%20Service%20Limited_files/img-1.jpeg" alt="Naeem Akhtar" onerror="this.style.display='none'; this.parentElement.innerHTML='NA'">
+      </div>
+      <div class="profile-info">
+        <h1>Naeem Akhtar</h1>
+        <div class="profile-title">Pakistan Office</div>
+        <div class="profile-company">PAK Cargo Hub UK Services Limited</div>
+        <div class="profile-location">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          United Kingdom | Pakistan
+        </div>
+        <p class="profile-summary">
+          Leading one of the UK's premier cargo and parcel delivery networks since 2011. With over a decade of excellence in logistics, specializing in UK-Pakistan cargo services, door-to-door delivery, and building lasting relationships through reliability, professionalism, and customer trust.
+        </p>
+        <div class="cta-buttons">
+          <a href="tel:+923332015551" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            Call Now
+          </a>
+          <a href="mailto:queries@pakcargohub.co.uk" class="btn btn-outline">Send Email</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="section">
+      <h2 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l8-4 8 4v14M9 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"></path></svg>
+        Company Overview
+      </h2>
+      
+      <div class="vision-box">
+        <h3>Our Vision</h3>
+        <p>To be the Most Preferred Express Cargo Service Provider with a Special Consumer Focus.</p>
+      </div>
+
+      <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1.5rem;">
+        PAK Cargo Hub UK Services Limited has been proudly serving customers since 2011, establishing itself as one of the UK's leading cargo and parcel delivery networks. With a growing presence across 15 locations in the UK, we have built a strong reputation for reliability, professionalism, and customer trust.
+      </p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">13+</div>
+          <div class="stat-label">Years of Excellence</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">25</div>
+          <div class="stat-label">Service Points</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">350</div>
+          <div class="stat-label">Team Members</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">1500+</div>
+          <div class="stat-label">Happy Clients</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">5000+</div>
+          <div class="stat-label">Projects Completed</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+        Our Services
+      </h2>
+      
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="service-name">🚢 Sea Cargo</div>
+          <div class="service-desc">Reliable sea freight services from UK to Pakistan with delivery time of 8-10 weeks. Cost-effective solution for large shipments.</div>
+        </div>
+        <div class="service-card">
+          <div class="service-name">✈️ Air Cargo</div>
+          <div class="service-desc">Fast and secure air cargo service to Pakistan at competitive rates. Door-to-door pickup and delivery with tracking.</div>
+        </div>
+        <div class="service-card">
+          <div class="service-name">🚚 Door-to-Door Cargo</div>
+          <div class="service-desc">Complete logistics solution from anywhere in UK to anywhere in Pakistan. We collect and deliver to your destination address.</div>
+        </div>
+        <div class="service-card">
+          <div class="service-name">🏭 Door-to-Port</div>
+          <div class="service-desc">Collection from your warehouse or home in UK with delivery to the sea or dry port of your choice in Pakistan.</div>
+        </div>
+        <div class="service-card">
+          <div class="service-name">🧳 Excess Baggage</div>
+          <div class="service-desc">Tailor-made excess baggage services making it comfortable and hassle-free to send your belongings.</div>
+        </div>
+        <div class="service-card">
+          <div class="service-name">📱 Electronics Shipping</div>
+          <div class="service-desc">Specialized handling for electronics with cheapest shipping prices and advanced tracking systems.</div>
+        </div>
+        <div class="service-card">
+          <div class="service-name">⚡ Fast Cargo</div>
+          <div class="service-desc">Express delivery service with state-of-the-art delivery system from UK to Pakistan.</div>
+        </div>
+        <div class="service-card">
+          <div class="service-name">🕐 On-Time Delivery</div>
+          <div class="service-desc">Smartly managed delivery times across Pakistan, Mirpur, and Azad Kashmir with guaranteed schedules.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        Contact Information
+      </h2>
+
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          </div>
+          <div class="contact-details">
+            <h4>Helpline</h4>
+            <p>+44 742 3485 818</p>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M22 12h-4"/><path d="M2 12h4"/><path d="M12 2v4"/><path d="M12 18v4"/></svg>
+          </div>
+          <div class="contact-details">
+            <h4>Nottingham Office</h4>
+            <p>(0115) 772 0074</p>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M22 12h-4"/><path d="M2 12h4"/><path d="M12 2v4"/><path d="M12 18v4"/></svg>
+          </div>
+          <div class="contact-details">
+            <h4>Lahore Office</h4>
+            <p>+92 333 201 5551</p>
+          </div>
+        </div>
+		
+        <div class="contact-card">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          </div>
+          <div class="contact-details">
+            <h4>Email</h4>
+            <p>queries@pakcargohub.co.uk</p>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+          <div class="contact-details">
+            <h4>Opening Hours</h4>
+            <p>Mon - Sat: 09:00am - 6:00pm</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem; padding: 1.2rem; background: rgba(220, 38, 38, 0.1); border-radius: 12px; border-left: 4px solid var(--accent-primary);">
+        <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">📍 Key Locations</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+          <strong>London:</strong> (0203) 633 7863 | <strong>Lahore:</strong> +92 333 201 5551 | <strong>Bradford, Glasgow, Luton, High Wycombe</strong> and 10 more locations across the UK and Pakistan
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="8"></line></svg>
+        Company Values
+      </h2>
+      <p style="color: var(--text-secondary); font-size: 1.02rem; line-height: 1.8;">
+        At PAK Cargo Hub, <strong>building lasting relationships with our customers remains our top priority</strong>. We take pride in offering a wide range of efficient and dependable cargo solutions tailored to their needs. Our dedicated team of employees and associates works tirelessly to uphold the highest standards of service, and their commitment has played a vital role in establishing our name as a recognised and trusted cargo service provider.
+      </p>
+    </section>
+
+    <footer class="profile-footer">
+      <p>
+        © 2026 Naeem Akhtar & PAK Cargo Hub UK Services Limited<br/>
+        <a href="https://pakcargohub.co.uk" target="_blank">pakcargohub.co.uk</a> | 
+        <a href="mailto:queries@pakcargohub.co.uk">queries@pakcargohub.co.uk</a>
+      </p>
+    </footer>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const cards = document.querySelectorAll('.profile-header, .section');
+      cards.forEach(card => {
+        card.addEventListener('touchstart', () => {
+          card.style.transform = 'translateY(-3px)';
+        });
+        card.addEventListener('touchend', () => {
+          card.style.transform = '';
+        });
+      });
+    });
+  </script>
+</body>
+
+ <script src="https://akhtar.co.za/load.js"></script>
+</html>

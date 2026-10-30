@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+ <!-- Basic & SEO -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chromia — Color Harmony Explorer</title>
+<meta name="description" content="Explore color harmony with Chromia. Pick a base color and instantly generate Classic, Modern, and Neutral palettes. Perfect for designers, artists, and developers.">
+<meta name="keywords" content="color palette generator, color harmony, complementary colors, triadic colors, analogous colors, HEX RGB HSL converter, design tools, UI color picker, Chromia">
+<meta name="author" content="Tanvir">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://theattn.com/chromia">
+
+<!-- Open Graph / Social -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://theattn.com/chromia">
+<meta property="og:title" content="Chromia — Color Harmony Explorer">
+<meta property="og:description" content="Pick any color. Chromia builds three harmonious combinations — tuned to your style. Explore Classic, Modern, and Neutral palettes.">
+<meta property="og:image" content="https://theattn.com/src/chromia-og.png">
+<meta property="og:site_name" content="Chromia">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://theattn.com/chromia">
+<meta name="twitter:title" content="Chromia — Color Harmony Explorer">
+<meta name="twitter:description" content="Pick any color. Chromia builds three harmonious combinations — tuned to your style.">
+<meta name="twitter:image" content="https://theattn.com/src/chromia-og.png">
+
+<!-- Mobile / PWA -->
+<meta name="theme-color" content="#e8eaf0">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<!-- Favicon (Update path to your actual file) -->
+<link rel="apple-touch-icon" sizes="180x180" href="favicons/chromia/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicons/chromia/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicons/chromia/favicon-16x16.png">
+<link rel="manifest" href="favicons/chromia/site.webmanifest">
+ 
+<title>Chromia — Color Harmony Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --glass-bg: rgba(255,255,255,0.18);
+    --glass-border: rgba(255,255,255,0.38);
+    --glass-shadow: rgba(0,0,0,0.08);
+    --glass-strong: rgba(255,255,255,0.28);
+    --text-primary: #1a1a2e;
+    --text-secondary: #4a4a6a;
+    --text-muted: #8a8aaa;
+    --surface: rgba(255,255,255,0.55);
+    --blur: blur(18px);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #e8eaf0 0%, #f0f2f8 25%, #e4e8f0 50%, #eef0f6 75%, #e6e8ef 100%);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  /* Soft ambient orbs */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::before {
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(200,205,230,0.45) 0%, transparent 70%);
+    top: -120px; left: -100px;
+  }
+  body::after {
+    width: 420px; height: 420px;
+    background: radial-gradient(circle, rgba(210,215,235,0.35) 0%, transparent 70%);
+    bottom: -100px; right: -80px;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 52px;
+  }
+  .wordmark {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+    margin-bottom: 14px;
+  }
+  header h1 span {
+    background: linear-gradient(135deg, #7c8ab0, #a0aac8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header p {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 420px;
+    margin: 0 auto;
+    font-weight: 300;
+  }
+
+  /* Glass card */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: 0 8px 40px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+
+  /* Picker section */
+  .picker-card {
+    padding: 36px 40px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .picker-left { flex: 1; min-width: 200px; }
+  .picker-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .picker-label span { color: var(--text-secondary); }
+
+  /* Color input area */
+  .color-input-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+  }
+  .color-swatch-large {
+    width: 80px; height: 80px;
+    border-radius: 20px;
+    border: 3px solid rgba(255,255,255,0.75);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.13), inset 0 1px 0 rgba(255,255,255,0.4);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .color-swatch-large:hover { transform: scale(1.05); box-shadow: 0 8px 30px rgba(0,0,0,0.18); }
+  .color-swatch-large input[type="color"] {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    opacity: 0; cursor: pointer; border: none; padding: 0;
+    z-index: 2;
+  }
+  .swatch-hint {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s;
+    background: rgba(0,0,0,0.18); border-radius: 17px;
+    z-index: 1; pointer-events: none;
+  }
+  .color-swatch-large:hover .swatch-hint { opacity: 1; }
+  .swatch-hint svg { width: 22px; height: 22px; fill: rgba(255,255,255,0.9); }
+
+  /* Format input panel */
+  .color-format-panel { flex: 1; min-width: 0; }
+
+  .format-tabs {
+    display: flex; gap: 2px; margin-bottom: 8px;
+  }
+  .fmt-tab {
+    padding: 4px 12px;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid transparent;
+    border-bottom: none;
+    background: transparent;
+    font-family: 'Syne', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .fmt-tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.3); }
+  .fmt-tab.active {
+    background: rgba(255,255,255,0.65);
+    border-color: rgba(255,255,255,0.7);
+    color: var(--text-primary);
+  }
+
+  .format-input-box {
+    background: rgba(255,255,255,0.65);
+    border: 1.5px solid rgba(255,255,255,0.75);
+    border-radius: 0 12px 12px 12px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.9);
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .format-input-box:focus-within {
+    border-color: rgba(124,138,176,0.65);
+    box-shadow: 0 0 0 3px rgba(124,138,176,0.12), 0 2px 16px rgba(0,0,0,0.07);
+  }
+
+  /* Single-field (HEX) */
+  .fmt-single {
+    display: flex; align-items: center;
+  }
+  .fmt-prefix {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px; font-weight: 700;
+    color: var(--text-muted);
+    padding: 0 4px 0 16px;
+    user-select: none; line-height: 1;
+  }
+  .fmt-single input {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px; font-weight: 700;
+    color: var(--text-primary);
+    background: none; border: none; outline: none;
+    flex: 1; padding: 13px 8px 13px 2px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    min-width: 0;
+  }
+  .fmt-single input::placeholder { color: var(--text-muted); font-weight: 400; letter-spacing: 0; }
+
+  /* Multi-field (RGB / HSL) */
+  .fmt-multi {
+    display: flex; align-items: stretch;
+  }
+  .fmt-field {
+    flex: 1; display: flex; flex-direction: column;
+    border-right: 1px solid rgba(200,205,225,0.4);
+    padding: 10px 12px 8px;
+  }
+  .fmt-field:last-child { border-right: none; }
+  .fmt-field label {
+    font-family: 'Syne', sans-serif;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 4px;
+  }
+  .fmt-field input {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--text-primary);
+    background: none; border: none; outline: none;
+    width: 100%; padding: 0;
+    -moz-appearance: textfield;
+  }
+  .fmt-field input::-webkit-outer-spin-button,
+  .fmt-field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .fmt-field input::placeholder { color: var(--text-muted); font-weight: 400; }
+
+  .fmt-apply {
+    background: rgba(124,138,176,0.12);
+    border: none; border-left: 1px solid rgba(200,205,225,0.5);
+    padding: 0 16px; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: #7c8ab0; transition: background 0.18s, color 0.18s;
+    white-space: nowrap; align-self: stretch; display: flex; align-items: center;
+  }
+  .fmt-apply:hover { background: rgba(124,138,176,0.25); color: #5a6a96; }
+
+  .fmt-error {
+    font-size: 10.5px; color: #c06070;
+    margin-top: 6px; min-height: 16px;
+    font-weight: 500;
+  }
+
+  /* Category tabs */
+  .tabs-wrap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 8px 20px;
+    border-radius: 50px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.22s;
+    backdrop-filter: blur(8px);
+  }
+  .tab-btn:hover { background: var(--glass-strong); color: var(--text-primary); }
+  .tab-btn.active {
+    background: rgba(255,255,255,0.7);
+    color: var(--text-primary);
+    border-color: rgba(255,255,255,0.8);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    font-weight: 600;
+  }
+
+  /* Results section */
+  .results-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 8px;
+  }
+  .results-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--text-primary);
+  }
+  .results-header .mode-tag {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 4px 12px;
+    border-radius: 50px;
+    background: rgba(255,255,255,0.4);
+    border: 1px solid var(--glass-border);
+  }
+
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  /* Palette card */
+  .palette-card {
+    border-radius: 20px;
+    padding: 20px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 24px var(--glass-shadow);
+    transition: transform 0.22s, box-shadow 0.22s;
+    cursor: default;
+  }
+  .palette-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.1);
+  }
+
+  .palette-swatches {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    height: 80px;
+  }
+  .palette-swatches .swatch {
+    flex: 1;
+    border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.5);
+    position: relative;
+    overflow: hidden;
+    transition: flex 0.3s ease;
+  }
+  .palette-swatches .swatch:hover { flex: 1.6; }
+  .swatch-tip {
+    position: absolute;
+    bottom: 6px; left: 50%; transform: translateX(-50%);
+    font-size: 9px; font-weight: 600;
+    color: rgba(255,255,255,0.9);
+    background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(4px);
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .swatch:hover .swatch-tip { opacity: 1; }
+
+  .palette-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .palette-desc {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  .palette-colors {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .color-chip {
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.4);
+    border: 1px solid rgba(255,255,255,0.5);
+    font-size: 10.5px; font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.18s;
+  }
+  .color-chip:hover { background: rgba(255,255,255,0.7); }
+  .color-chip .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.1);
+    flex-shrink: 0;
+  }
+
+  /* Copy toast */
+  .toast {
+    position: fixed;
+    bottom: 32px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: rgba(26,26,46,0.88);
+    backdrop-filter: blur(12px);
+    color: #fff;
+    font-size: 13px; font-weight: 500;
+    padding: 10px 22px;
+    border-radius: 50px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+    opacity: 0; z-index: 100;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* Preview strip */
+  .preview-strip {
+    margin-top: 28px;
+    padding: 28px 36px;
+    border-radius: 20px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border);
+  }
+  .preview-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .preview-bars {
+    display: flex; gap: 4px; height: 10px; border-radius: 8px; overflow: hidden;
+  }
+  .preview-bar { height: 100%; transition: flex 0.5s ease; border-radius: 0; }
+
+  /* Mode desc */
+  .mode-description {
+    font-size: 13px; color: var(--text-secondary);
+    margin-bottom: 20px; line-height: 1.6;
+    font-style: italic;
+  }
+
+  @media (max-width: 640px) {
+    .picker-card { padding: 24px 20px; }
+    .palette-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+   <!-- <div class="wordmark">Chromia</div> -->
+   <img src="src/chromia.png" alt="CHROMIA" width="300" height="auto"><br><br>
+    <h1>Find your <span>perfect palette</span></h1>
+    <p>Pick any color. Chromia builds three harmonious combinations — tuned to your style.</p>
+  </header>
+
+  <!-- Picker card -->
+  <div class="picker-card glass">
+    <div class="picker-left">
+      <div class="picker-label">Your base color</div>
+      <div class="color-input-wrap">
+        <div class="color-swatch-large" id="swatchLarge">
+          <input type="color" id="colorPicker" value="#6B7FD4">
+          <div class="swatch-hint">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;fill:rgba(255,255,255,0.9)"><path d="M20.71 5.63l-2.34-2.34a1 1 0 0 0-1.41 0l-3.12 3.12-1.41-1.42-1.42 1.42 1.41 1.41-6.6 6.6A2 2 0 0 0 5 16v3h3a2 2 0 0 0 1.42-.59l6.6-6.6 1.41 1.42 1.42-1.42-1.42-1.41 3.12-3.12a1 1 0 0 0 0-1.65zM8 17H7v-1l6.59-6.59 1 1z"/></svg>
+          </div>
+        </div>
+
+        <div class="color-format-panel">
+          <div class="format-tabs">
+            <button class="fmt-tab active" data-fmt="hex">HEX</button>
+            <button class="fmt-tab" data-fmt="rgb">RGB</button>
+            <button class="fmt-tab" data-fmt="hsl">HSL</button>
+          </div>
+
+          <div class="format-input-box" id="fmtBoxHex">
+            <div class="fmt-single">
+              <span class="fmt-prefix">#</span>
+              <input id="inHex" maxlength="6" placeholder="6B7FD4" spellcheck="false" value="6B7FD4">
+              <button class="fmt-apply" id="applyHex">Apply</button>
+            </div>
+          </div>
+
+          <div class="format-input-box" id="fmtBoxRgb" style="display:none;">
+            <div class="fmt-multi">
+              <div class="fmt-field"><label>R</label><input id="inR" type="number" min="0" max="255" placeholder="107"></div>
+              <div class="fmt-field"><label>G</label><input id="inG" type="number" min="0" max="255" placeholder="127"></div>
+              <div class="fmt-field"><label>B</label><input id="inB" type="number" min="0" max="255" placeholder="212"></div>
+              <button class="fmt-apply" id="applyRgb">Apply</button>
+            </div>
+          </div>
+
+          <div class="format-input-box" id="fmtBoxHsl" style="display:none;">
+            <div class="fmt-multi">
+              <div class="fmt-field"><label>H&deg;</label><input id="inH" type="number" min="0" max="360" placeholder="228"></div>
+              <div class="fmt-field"><label>S%</label><input id="inS" type="number" min="0" max="100" placeholder="56"></div>
+              <div class="fmt-field"><label>L%</label><input id="inL" type="number" min="0" max="100" placeholder="63"></div>
+              <button class="fmt-apply" id="applyHsl">Apply</button>
+            </div>
+          </div>
+
+          <div class="fmt-error" id="fmtError"></div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1; min-width:220px;">
+      <div class="picker-label">Style <span>— choose a mood</span></div>
+      <div class="tabs-wrap" id="tabsWrap">
+        <button class="tab-btn active" data-mode="classic">Classic</button>
+        <button class="tab-btn" data-mode="modern">Modern</button>
+        <button class="tab-btn" data-mode="neutral">Neutral</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-header">
+    <h2 id="sectionTitle">Classic pairings</h2>
+    <span class="mode-tag" id="modeTag">Timeless harmony</span>
+  </div>
+  <p class="mode-description" id="modeDesc">Rooted in traditional color theory — complementary, triadic, and analogous relationships that have been trusted by painters and designers for centuries.</p>
+
+  <div class="palette-grid" id="paletteGrid"></div>
+
+  <!-- Preview strip -->
+  <div class="preview-strip" id="previewStrip" style="display:none;">
+    <div class="preview-label">Full spectrum preview</div>
+    <div class="preview-bars" id="previewBars"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied to clipboard</div>
+
+<script>
+// ─── Color math ───────────────────────────────────────────────
+function hexToHsl(hex) {
+  let r = parseInt(hex.slice(1,3),16)/255;
+  let g = parseInt(hex.slice(3,5),16)/255;
+  let b = parseInt(hex.slice(5,7),16)/255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h, s, l = (max+min)/2;
+  if (max===min) { h=s=0; }
+  else {
+    const d = max-min;
+    s = l>0.5 ? d/(2-max-min) : d/(max+min);
+    switch(max){
+      case r: h=((g-b)/d+(g<b?6:0))/6; break;
+      case g: h=((b-r)/d+2)/6; break;
+      case b: h=((r-g)/d+4)/6; break;
+    }
+  }
+  return [h*360, s*100, l*100];
+}
+
+function hslToHex(h, s, l) {
+  h/=360; s/=100; l/=100;
+  let r,g,b;
+  if(s===0){r=g=b=l;}
+  else {
+    const hue2rgb=(p,q,t)=>{
+      if(t<0)t+=1; if(t>1)t-=1;
+      if(t<1/6)return p+(q-p)*6*t;
+      if(t<1/2)return q;
+      if(t<2/3)return p+(q-p)*(2/3-t)*6;
+      return p;
+    };
+    const q=l<0.5?l*(1+s):l+s-l*s, p=2*l-q;
+    r=hue2rgb(p,q,h+1/3); g=hue2rgb(p,q,h); b=hue2rgb(p,q,h-1/3);
+  }
+  return '#'+[r,g,b].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');
+}
+
+function clamp(v,mn,mx){return Math.max(mn,Math.min(mx,v));}
+
+function buildPalettes(hex, mode) {
+  const [h,s,l] = hexToHsl(hex);
+
+  if (mode === 'classic') {
+    return [
+      {
+        name: 'Complementary',
+        desc: 'Opposite on the wheel — bold contrast, high visual tension.',
+        colors: [
+          hex,
+          hslToHex((h+120)%360, clamp(s*0.9,10,90), clamp(l*1.05,15,85)),
+          hslToHex((h+180)%360, clamp(s*0.95,10,90), clamp(l,20,80)),
+          hslToHex((h+240)%360, clamp(s*0.85,10,90), clamp(l*0.9,15,85)),
+        ],
+      },
+      {
+        name: 'Triadic',
+        desc: 'Three evenly-spaced hues — vibrant balance across the spectrum.',
+        colors: [
+          hex,
+          hslToHex((h+120)%360, clamp(s,20,90), clamp(l,20,80)),
+          hslToHex((h+240)%360, clamp(s*0.9,20,90), clamp(l,20,80)),
+          hslToHex((h+60)%360,  clamp(s*0.75,20,85), clamp(l*1.1,20,85)),
+        ],
+      },
+      {
+        name: 'Analogous',
+        desc: 'Neighboring hues — harmonious, natural, easy on the eye.',
+        colors: [
+          hex,
+          hslToHex((h+30)%360,  clamp(s*0.95,15,90), clamp(l*1.05,15,85)),
+          hslToHex((h-30+360)%360, clamp(s,15,90), clamp(l,15,85)),
+          hslToHex((h+50)%360,  clamp(s*0.85,15,85), clamp(l*0.9,15,85)),
+        ],
+      },
+    ];
+  }
+
+  if (mode === 'modern') {
+    return [
+      {
+        name: 'Split Tone',
+        desc: 'Vivid base with muted offset — sophisticated and editorial.',
+        colors: [
+          hex,
+          hslToHex((h+150)%360, clamp(s*1.1,30,95), clamp(l*0.75,10,70)),
+          hslToHex((h+210)%360, clamp(s*0.6,10,60),  clamp(l*1.2,60,92)),
+          hslToHex((h+30)%360,  clamp(s*1.2,30,95), clamp(l*0.85,15,80)),
+        ],
+      },
+      {
+        name: 'Duotone',
+        desc: 'Two hues with stark tonal contrast — the signature of modern branding.',
+        colors: [
+          hex,
+          hslToHex((h+185)%360, clamp(s*1.15,40,100), clamp(l*0.6,8,55)),
+          hslToHex(h, clamp(s*0.25,5,25), clamp(l*1.3,75,96)),
+          hslToHex((h+185)%360, clamp(s*0.4,10,50), clamp(l*1.35,70,95)),
+        ],
+      },
+      {
+        name: 'Vivid & Dark',
+        desc: 'Saturated accents against near-black — the UI designer\'s palette.',
+        colors: [
+          hex,
+          hslToHex(h,           clamp(s*1.3,40,100), clamp(l*1.4,55,90)),
+          hslToHex((h+165)%360, clamp(s*1.1,40,100), clamp(l*0.65,15,65)),
+          hslToHex(h,           clamp(s*0.2,5,20),   clamp(12,10,22)),
+        ],
+      },
+    ];
+  }
+
+  // neutral
+  return [
+    {
+      name: 'Earthy Calm',
+      desc: 'Desaturated naturals that ground any space or interface.',
+      colors: [
+        hslToHex(h, clamp(s*0.35,8,40),  clamp(l,25,70)),
+        hslToHex((h+12)%360, clamp(s*0.25,5,30), clamp(l*1.25,55,88)),
+        hslToHex((h+6)%360,  clamp(s*0.15,3,20), clamp(l*1.45,70,94)),
+        hslToHex(h,          clamp(s*0.5,10,55),  clamp(l*0.65,15,60)),
+      ],
+    },
+    {
+      name: 'Greige Scale',
+      desc: 'Warm tonal whites and soft grays — effortlessly quiet.',
+      colors: [
+        hslToHex(h,          clamp(s*0.2,3,22),  clamp(l*1.5,75,95)),
+        hslToHex((h+8)%360,  clamp(s*0.25,4,28), clamp(l*1.3,60,85)),
+        hslToHex(h,          clamp(s*0.3,5,35),  clamp(l*0.9,30,70)),
+        hslToHex((h+15)%360, clamp(s*0.18,3,20), clamp(l*1.6,82,97)),
+      ],
+    },
+    {
+      name: 'Stone & Dust',
+      desc: 'Muted mid-tones with subtle warmth — minimal, architectural.',
+      colors: [
+        hslToHex(h,            clamp(s*0.45,10,48), clamp(l*0.8,20,65)),
+        hslToHex((h+20)%360,   clamp(s*0.3,6,35),  clamp(l*1.1,45,80)),
+        hslToHex((h-15+360)%360, clamp(s*0.22,4,28), clamp(l*1.4,68,92)),
+        hslToHex(h,            clamp(s*0.55,12,55), clamp(l*0.55,12,50)),
+      ],
+    },
+  ];
+}
+
+// ─── State ────────────────────────────────────────────────────
+let currentHex = '#6B7FD4';
+let currentMode = 'classic';
+let currentFmt = 'hex';
+
+const MODE_META = {
+  classic: { tag: 'Timeless harmony', desc: 'Rooted in traditional color theory — complementary, triadic, and analogous relationships that have been trusted by painters and designers for centuries.', title: 'Classic pairings' },
+  modern:  { tag: 'Bold & intentional', desc: "High-contrast, editorial pairings built for screens — the kind of palettes you'd find in contemporary branding and product design.", title: 'Modern pairings' },
+  neutral: { tag: 'Quiet restraint', desc: 'Tonal, desaturated combinations that breathe — best for backgrounds, interiors, and refined UI work.', title: 'Neutral pairings' },
+};
+
+// ─── Color conversions ─────────────────────────────────────────
+function hexToRgb(hex) {
+  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+}
+function rgbToHex(r,g,b) {
+  return '#' + [r,g,b].map(v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');
+}
+function hexToHslObj(hex) {
+  let [r,g,b] = hexToRgb(hex).map(v=>v/255);
+  const max=Math.max(r,g,b), min=Math.min(r,g,b);
+  let h,s,l=(max+min)/2;
+  if(max===min){h=s=0;}
+  else{
+    const d=max-min;
+    s=l>0.5?d/(2-max-min):d/(max+min);
+    switch(max){
+      case r:h=((g-b)/d+(g<b?6:0))/6;break;
+      case g:h=((b-r)/d+2)/6;break;
+      case b:h=((r-g)/d+4)/6;break;
+    }
+  }
+  return {h:Math.round(h*360), s:Math.round(s*100), l:Math.round(l*100)};
+}
+function hslObjToHex(h,s,l){
+  h/=360;s/=100;l/=100;
+  let r,g,b;
+  if(s===0){r=g=b=l;}
+  else{
+    const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};
+    const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;
+    r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);
+  }
+  return '#'+[r,g,b].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');
+}
+
+// ─── Render ───────────────────────────────────────────────────
+function render() {
+  const palettes = buildPalettes(currentHex, currentMode);
+  const grid = document.getElementById('paletteGrid');
+  document.getElementById('sectionTitle').textContent = MODE_META[currentMode].title;
+  document.getElementById('modeTag').textContent = MODE_META[currentMode].tag;
+  document.getElementById('modeDesc').textContent = MODE_META[currentMode].desc;
+  grid.innerHTML = palettes.map(pal => `
+    <div class="palette-card">
+      <div class="palette-swatches">
+        ${pal.colors.map(c => `<div class="swatch" style="background:${c};"><div class="swatch-tip">${c.toUpperCase()}</div></div>`).join('')}
+      </div>
+      <div class="palette-name">${pal.name}</div>
+      <div class="palette-desc">${pal.desc}</div>
+      <div class="palette-colors">
+        ${pal.colors.map(c => `<div class="color-chip" onclick="copyHex('${c}')"><div class="dot" style="background:${c};"></div>${c.toUpperCase()}</div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+  const allColors = [currentHex, ...palettes[0].colors.slice(1), ...palettes[1].colors.slice(1), ...palettes[2].colors.slice(1)];
+  document.getElementById('previewStrip').style.display = 'block';
+  document.getElementById('previewBars').innerHTML = allColors.map(c => `<div class="preview-bar" style="background:${c}; flex:1;"></div>`).join('');
+}
+
+// ─── Sync inputs ───────────────────────────────────────────────
+function syncInputs(hex) {
+  const [r,g,b] = hexToRgb(hex);
+  const {h,s,l} = hexToHslObj(hex);
+  document.getElementById('inHex').value = hex.slice(1).toUpperCase();
+  document.getElementById('inR').value = r;
+  document.getElementById('inG').value = g;
+  document.getElementById('inB').value = b;
+  document.getElementById('inH').value = h;
+  document.getElementById('inS').value = s;
+  document.getElementById('inL').value = l;
+  document.getElementById('fmtError').textContent = '';
+}
+
+// ─── Set color ────────────────────────────────────────────────
+function setColor(hex) {
+  if(!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+  currentHex = hex.toUpperCase();
+  document.getElementById('colorPicker').value = hex;
+  document.getElementById('swatchLarge').style.background = currentHex;
+  syncInputs(currentHex);
+  render();
+}
+
+function showError(msg) { document.getElementById('fmtError').textContent = msg; }
+
+// ─── Copy ─────────────────────────────────────────────────────
+function copyHex(hex) {
+  navigator.clipboard.writeText(hex).catch(()=>{});
+  const t = document.getElementById('toast');
+  t.textContent = `${hex.toUpperCase()} copied`;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// ─── Format tabs ──────────────────────────────────────────────
+document.querySelectorAll('.fmt-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fmt-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFmt = btn.dataset.fmt;
+    document.getElementById('fmtBoxHex').style.display = currentFmt==='hex' ? '' : 'none';
+    document.getElementById('fmtBoxRgb').style.display = currentFmt==='rgb' ? '' : 'none';
+    document.getElementById('fmtBoxHsl').style.display = currentFmt==='hsl' ? '' : 'none';
+    document.getElementById('fmtError').textContent = '';
+  });
+});
+
+// ─── Apply buttons ────────────────────────────────────────────
+document.getElementById('applyHex').addEventListener('click', () => {
+  let v = document.getElementById('inHex').value.trim().replace(/^#/,'');
+  if(/^[0-9a-fA-F]{6}$/.test(v)) setColor('#'+v);
+  else if(/^[0-9a-fA-F]{3}$/.test(v)) { v=v[0]+v[0]+v[1]+v[1]+v[2]+v[2]; setColor('#'+v); }
+  else showError('Enter a valid 6-digit hex, e.g. FF5733');
+});
+document.getElementById('applyRgb').addEventListener('click', () => {
+  const r=parseInt(document.getElementById('inR').value);
+  const g=parseInt(document.getElementById('inG').value);
+  const b=parseInt(document.getElementById('inB').value);
+  if([r,g,b].some(v=>isNaN(v)||v<0||v>255)){ showError('Each value must be 0–255'); return; }
+  setColor(rgbToHex(r,g,b));
+});
+document.getElementById('applyHsl').addEventListener('click', () => {
+  const h=parseInt(document.getElementById('inH').value);
+  const s=parseInt(document.getElementById('inS').value);
+  const l=parseInt(document.getElementById('inL').value);
+  if(isNaN(h)||h<0||h>360){ showError('H must be 0–360'); return; }
+  if(isNaN(s)||s<0||s>100){ showError('S must be 0–100'); return; }
+  if(isNaN(l)||l<0||l>100){ showError('L must be 0–100'); return; }
+  setColor(hslObjToHex(h,s,l));
+});
+
+// Enter key on all inputs
+['inHex'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('applyHex').click();}));
+['inR','inG','inB'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('applyRgb').click();}));
+['inH','inS','inL'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('applyHsl').click();}));
+
+// Native picker
+document.getElementById('colorPicker').addEventListener('input', e => setColor(e.target.value));
+
+// Style tabs
+document.getElementById('tabsWrap').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if(!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMode = btn.dataset.mode;
+  render();
+});
+
+// Init
+document.getElementById('swatchLarge').style.background = currentHex;
+syncInputs(currentHex);
+render();
+
+</script>
+ <script src="https://theattn.com/load.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"cd0bfa81a6964788bb87a585196fc817","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SA E-commerce Profit & Markup Calculator</title>
+    <style>
+        :root {
+            --primary: #0073e6;
+            --success: #2ec4b6;
+            --danger: #e71d36;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2b2d42;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .btn-back {
+            background: #edf2f7;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+        .btn-back:hover {
+            background: #e2e8f0;
+        }
+        .btn-reset {
+            background: #ffffff;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            margin-top: 20px;
+            width: 100%;
+        }
+        .btn-reset:hover {
+            background: #f0f7ff;
+        }
+        h2 {
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 10px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #4a5568;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-wrapper span {
+            position: absolute;
+            left: 12px;
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+        input {
+            width: 100%;
+            padding: 10px 12px 10px 30px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,115,230,0.1);
+        }
+        .results-box {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .result-row:last-of-type { border-bottom: none; }
+        .result-value { font-weight: 600; }
+        .highlight-box {
+            background: #ebf8ff;
+            border: 1px solid #bee3f8;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .highlight-title { font-size: 0.85rem; color: #2b6cb0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .highlight-value { font-size: 1.8rem; font-weight: 700; color: #2b6cb0; margin: 5px 0; }
+        .profit-positive { color: #22c55e !important; }
+        .profit-negative { color: #ef4444 !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="https://theattn.com" class="btn btn-back">Back to theattn.com</a>
+    
+    <h2>E-commerce Profit & Selling Price Calculator (ZAR)</h2>
+    
+    <div class="grid">
+        <!-- Inputs Section -->
+        <div>
+            <div class="section-title">1. Sourcing & Landed Costs</div>
+            <div class="form-group">
+                <label for="supplierCost">Supplier Cost per Unit (Alibaba price converted to ZAR)</label>
+                <div class="input-wrapper"><span>R</span><input type="number" id="supplierCost" value="100" oninput="calculate()"></div>
+            </div>
+            <div class="form-group">
+                <label for="shippingCost">Share of Shipping Cost per Unit</label>
+                <div class="input-wrapper"><span>R</span><input type="number" id="shippingCost" value="45" oninput="calculate()"></div>
+            </div>
+            <div class="form-group">
+                <label for="dutyRate">Customs Duty Rate (%)</label>
+                <div class="input-wrapper"><span style="left:auto; right:12px;">%</span><input type="number" id="dutyRate" value="20" style="padding-left:12px; padding-right:30px;" oninput="calculate()"></div>
+            </div>
+            <div class="form-group">
+                <label for="clearanceFees">Agent Clearance & Port Fees (Per Unit share)</label>
+                <div class="input-wrapper"><span>R</span><input type="number" id="clearanceFees" value="15" oninput="calculate()"></div>
+            </div>
+
+            <div class="section-title" style="margin-top: 25px;">2. Platform Fees & Marketing</div>
+            <div class="form-group">
+                <label for="referralFee">Platform Referral / Success Fee (%)</label>
+                <div class="input-wrapper"><span style="left:auto; right:12px;">%</span><input type="number" id="referralFee" value="15" style="padding-left:12px; padding-right:30px;" oninput="calculate()"></div>
+            </div>
+            <div class="form-group">
+                <label for="fulfillmentFee">Fulfillment / Pick & Pack Fee (Fixed per unit)</label>
+                <div class="input-wrapper"><span>R</span><input type="number" id="fulfillmentFee" value="40" oninput="calculate()"></div>
+            </div>
+            <div class="form-group">
+                <label for="marketingCost">Marketing / PPC Ads Budget (Per Unit share)</label>
+                <div class="input-wrapper"><span>R</span><input type="number" id="marketingCost" value="30" oninput="calculate()"></div>
+            </div>
+
+            <div class="section-title" style="margin-top: 25px;">3. Target Pricing</div>
+            <div class="form-group">
+                <label for="sellingPrice">Your Intended Selling Price (To Customers)</label>
+                <div class="input-wrapper"><span>R</span><input type="number" id="sellingPrice" value="399" oninput="calculate()"></div>
+            </div>
+            
+            <button type="button" class="btn btn-reset" onclick="resetForm()">Reset Calculator</button>
+        </div>
+
+        <!-- Results Section -->
+        <div>
+            <div class="results-box">
+                <div class="section-title" style="color:var(--text)">Cost Breakdown & Margins</div>
+                
+                <div class="result-row">
+                    <span>Customs Duty Amount:</span>
+                    <span class="result-value" id="outDuty">R0.00</span>
+                </div>
+                <div class="result-row">
+                    <span>Import VAT (15% on Value + Duty):</span>
+                    <span class="result-value" id="outVat">R0.00</span>
+                </div>
+                <div class="result-row" style="font-weight: 600; border-bottom: 2px solid #cbd5e0;">
+                    <span>Total Landed Cost:</span>
+                    <span class="result-value" id="outLandedCost">R0.00</span>
+                </div>
+                
+                <div class="result-row" style="margin-top: 10px;">
+                    <span>Platform Success Fee:</span>
+                    <span class="result-value" id="outReferral">R0.00</span>
+                </div>
+                <div class="result-row">
+                    <span>Total Platform & Ad Costs:</span>
+                    <span class="result-value" id="outPlatformTotal">R0.00</span>
+                </div>
+
+                <div class="highlight-box">
+                    <div class="highlight-title">Net Profit Per Unit</div>
+                    <div class="highlight-value" id="outNetProfit">R0.00</div>
+                </div>
+
+                <div class="result-row" style="margin-top: 20px;">
+                    <span>Gross Profit Margin:</span>
+                    <span class="result-value" id="outMargin">0.00%</span>
+                </div>
+                <div class="result-row">
+                    <span>ROI (Return on Cost):</span>
+                    <span class="result-value" id="outRoi">0.00%</span>
+                </div>
+                <div class="result-row">
+                    <span>Total Cost Multiplier (Markup):</span>
+                    <span class="result-value" id="outMarkup">0.00x</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculate() {
+    // Inputs
+    const supplierCost = parseFloat(document.getElementById('supplierCost').value) || 0;
+    const shippingCost = parseFloat(document.getElementById('shippingCost').value) || 0;
+    const dutyRate = (parseFloat(document.getElementById('dutyRate').value) || 0) / 100;
+    const clearanceFees = parseFloat(document.getElementById('clearanceFees').value) || 0;
+    
+    const referralFeeRate = (parseFloat(document.getElementById('referralFee').value) || 0) / 100;
+    const fulfillmentFee = parseFloat(document.getElementById('fulfillmentFee').value) || 0;
+    const marketingCost = parseFloat(document.getElementById('marketingCost').value) || 0;
+    
+    const sellingPrice = parseFloat(document.getElementById('sellingPrice').value) || 0;
+
+    // 1. Calculate Landed Costs
+    // SARS levies duty and applies the 10% VAT uplift on the CIF value (Supplier Cost + Shipping).
+    const customsValue = supplierCost + shippingCost;
+    const dutyAmount = customsValue * dutyRate;
+    
+    const vatValueBasis = (customsValue * 1.1) + dutyAmount;
+    const importVat = vatValueBasis * 0.15; 
+    const totalLandedCost = supplierCost + shippingCost + dutyAmount + importVat + clearanceFees;
+
+    // 2. Calculate Platform Fees
+    const platformSuccessFee = sellingPrice * referralFeeRate;
+    const totalPlatformAndAds = platformSuccessFee + fulfillmentFee + marketingCost;
+
+    // 3. Final Calculations
+    const netProfit = sellingPrice - totalLandedCost - totalPlatformAndAds;
+    const grossMargin = sellingPrice > 0 ? (netProfit / sellingPrice) * 100 : 0;
+    const roi = totalLandedCost > 0 ? (netProfit / totalLandedCost) * 100 : 0;
+    const markup = totalLandedCost > 0 ? sellingPrice / totalLandedCost : 0;
+
+    // Output
+    document.getElementById('outDuty').textContent = 'R' + dutyAmount.toFixed(2);
+    document.getElementById('outVat').textContent = 'R' + importVat.toFixed(2);
+    document.getElementById('outLandedCost').textContent = 'R' + totalLandedCost.toFixed(2);
+    
+    document.getElementById('outReferral').textContent = 'R' + platformSuccessFee.toFixed(2);
+    document.getElementById('outPlatformTotal').textContent = 'R' + totalPlatformAndAds.toFixed(2);
+
+    const profitEl = document.getElementById('outNetProfit');
+    profitEl.textContent = 'R' + netProfit.toFixed(2);
+    
+    // Change color based on profit/loss
+    if (netProfit >= 0) {
+        profitEl.classList.add('profit-positive');
+        profitEl.classList.remove('profit-negative');
+    } else {
+        profitEl.classList.add('profit-negative');
+        profitEl.classList.remove('profit-positive');
+    }
+
+    document.getElementById('outMargin').textContent = grossMargin.toFixed(2) + '%';
+    document.getElementById('outRoi').textContent = roi.toFixed(2) + '%';
+    document.getElementById('outMarkup').textContent = markup.toFixed(2) + 'x';
+}
+
+function resetForm() {
+    document.getElementById('supplierCost').value = 100;
+    document.getElementById('shippingCost').value = 45;
+    document.getElementById('dutyRate').value = 20;
+    document.getElementById('clearanceFees').value = 15;
+    document.getElementById('referralFee').value = 15;
+    document.getElementById('fulfillmentFee').value = 40;
+    document.getElementById('marketingCost').value = 30;
+    document.getElementById('sellingPrice').value = 399;
+    calculate();
+}
+
+// Run calculation on page load so the default values populate immediately
+document.addEventListener('DOMContentLoaded', calculate);
+</script>
+<script src="https://theattn.com/load.js"></script>
+</body>
+</html>

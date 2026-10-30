@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quick Poster Maker</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Pacifico&display=swap" rel="stylesheet">
+    
+      <!-- SEO Meta Tags -->
+    <meta name="keywords" content="poster, maker, free, canvas, design">
+    <meta name="description" content="Free poster maker for simple announcments.">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --glass-panel: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --text-main: #1d1d1f;
+            --text-sub: #6e6e73;
+            --accent: #007AFF;
+            --panel-dark: rgba(240, 240, 245, 0.92);
+            --panel-border: rgba(0, 0, 0, 0.12);
+        }
+
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            margin: 0; padding: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, sans-serif;
+            display: flex; justify-content: center; align-items: flex-start;
+            min-height: 100vh; padding: clamp(0.75rem, 4vw, 1.5rem);
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 100%; max-width: 1100px;
+            background: var(--glass-panel); 
+            -filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); 
+            border-radius: 24px;
+            padding: clamp(1.5rem, 4vw, 2.5rem); 
+            display: grid; grid-template-columns: 340px 1fr;
+            gap: clamp(1.5rem, 4vw, 2.5rem); 
+            box-shadow: var(--glass-shadow);
+            align-items: start;
+        }
+
+        .controls { display: flex; flex-direction: column; gap: 1.5rem; }
+        .control-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .control-group > label { 
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase; 
+            letter-spacing: 1px; color: var(--text-sub); margin: 0; 
+        }
+
+        .row-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+        .row-label span { font-size: 0.8rem; color: var(--text-sub); font-weight: 500; }
+
+        textarea, select, input[type="color"], .stepper-control {
+            width: 100%; background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 12px;
+            color: var(--text-main); padding: 0.8rem; font-size: 0.95rem;
+            -webkit-appearance: none; margin: 0; font-family: inherit;
+        }
+        textarea { resize: vertical; min-height: 60px; }
+        textarea::placeholder, input::placeholder { color: #aaa; }
+        
+        select { cursor: pointer; background-image: url("image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236e6e73' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; }
+        
+        input[type="color"] { height: 48px; padding: 6px; cursor: pointer; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); }
+
+        .color-pick-row { display: flex; gap: 1rem; }
+        .color-pick-row .wrap { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; }
+        .color-pick-row span { font-size: 0.75rem; color: var(--text-sub); text-align: center; font-weight: 500; }
+
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none; width: 100%; height: 6px;
+            background: rgba(0,0,0,0.1); border-radius: 3px; outline: none; margin: 0; padding: 0; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+            background: #fff; border: 2px solid var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; margin-top: -8px;
+        }
+        input[type="range"]::-moz-range-track { background: rgba(0,0,0,0.1); height: 6px; border-radius: 3px; border: none; }
+        input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; border: none; }
+
+        .cat-btns, .style-btns, .btn-group { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+        
+        .pill { 
+            background: #fff; border: 1px solid rgba(0,0,0,0.08); color: #555; 
+            padding: 0.6rem 1.1rem; border-radius: 24px; cursor: pointer; 
+            font-size: 0.85rem; font-weight: 500; user-select: none; min-height: 40px; 
+            display: inline-flex; align-items: center; justify-content: center; 
+        }
+        .pill.active { background: var(--text-main); color: #fff; border-color: var(--text-main); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        
+        .style-btn { 
+            width: 44px; height: 40px; display: flex; align-items: center; justify-content: center; 
+            background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 10px; 
+            cursor: pointer; color: #555; font-size: 1.1rem; font-weight: 600; margin: 0; 
+        }
+        .style-btn.active { background: var(--text-main); color: #fff; border-color: var(--text-main); }
+        .style-btn.u { text-decoration: underline; }
+
+                .color-toggle { 
+            display: flex; background: #fff; border: 1px solid rgba(0,0,0,0.08); 
+            border-radius: 10px; padding: 4px; width: fit-content; 
+            height: 40px; /* Matches .style-btn height */
+            align-items: center;
+        }
+        .color-toggle label { 
+            flex: 1; padding: 0 0.8rem; cursor: pointer; border-radius: 7px; 
+            margin: 0; font-size: 0.85rem; font-weight: 500; color: #999; 
+            text-align: center; height: 32px; /* 40px container - 8px vertical padding */
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        input[type="radio"]:checked + label { background: var(--text-main); color: #fff; }
+        input[type="radio"] { display: none; }
+        input[type="radio"]:checked + label { background: var(--text-main); color: #fff; }
+
+        .stepper-control {
+            display: flex; align-items: center; justify-content: center;
+            background: #fff; border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 12px; overflow: hidden; height: 48px; user-select: none;
+        }
+        .stepper-btn {
+            width: 50px; height: 100%; background: transparent; border: none;
+            color: #007AFF; font-size: 1.5rem; font-weight: 300; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .stepper-btn:active { background: rgba(0,0,0,0.05); }
+        .stepper-value {
+            flex: 1; text-align: center; color: var(--text-main); font-size: 1rem; font-weight: 600;
+            pointer-events: none; letter-spacing: 0.5px;
+        }
+
+        .tilt-options { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .tilt-pill { flex: 1; min-width: 0; text-align: center; padding: 0.65rem 0.5rem; background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: #555; }
+        .tilt-pill.active { background: var(--text-main); color: #fff; border-color: var(--text-main); }
+
+        /* Darker panel for backdrop controls */
+        .backdrop-panel {
+            background: var(--panel-dark);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        /* Image  Toggle Button */
+        .img-upload-wrap { display: flex; gap: 0.5rem; align-items: center; }
+        .img-upload-btn, .img-clear-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px;
+            padding: 0.6rem 1rem; font-size: 0.85rem; font-weight: 500; color: var(--text-main);
+            cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
+            transition: background 0.15s;
+        }
+        .img-upload-btn:hover { background: rgba(0,0,0,0.03); }
+        .img-clear-btn {
+            background: #fff; color: #ff3b30; border-color: rgba(255,59,48,0.3); padding: 0 0.9rem;
+        }
+        .img-clear-btn:hover { background: rgba(255,59,48,0.08); }
+        .img-upload-input { display: none; }
+
+        .btn-group { margin-top: auto; gap: 1rem; }
+        .btn { flex: 1; padding: 1rem; border: none; border-radius: 14px; font-weight: 600; cursor: pointer; font-size: 1rem; min-height: 52px; letter-spacing: 0.5px; }
+        .btn-primary { background: var(--text-main); color: #fff; }
+        .btn-secondary { background: rgba(255,255,255,0.8); color: var(--text-main); border: 1px solid rgba(0,0,0,0.1); }
+
+        .app-footer {
+            text-align: center; padding-top: 1rem; margin-top: 0.5rem;
+            border-top: 1px solid rgba(0,0,0,0.08);
+        }
+        .app-footer a {
+            color: var(--text-sub); font-size: 0.75rem; text-decoration: none;
+            letter-spacing: 0.5px; opacity: 0.8;
+        }
+        .app-footer a:hover { opacity: 1; }
+
+        /* STICKY PREVIEW */
+        .preview-area {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 1.5rem;
+            align-self: start;
+            display: flex; justify-content: center; align-items: center;
+            background: repeating-conic-gradient(#e5e5e5 0% 25%, #f5f5f5 0% 50%) 50% / 20px 20px;
+            border-radius: 20px; padding: 1rem; min-height: 400px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        #canvas-preview {
+            position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            padding: 2.5rem 1.5rem; overflow: hidden; gap: 0.8rem;
+            background-size: cover; background-position: center;
+        }
+
+        #header-preview, #footer-preview {
+            position: absolute; left: 0; right: 0; padding: 0 1.5rem;
+            text-align: center; z-index: 4; pointer-events: none;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        #header-preview { top: 1.5rem; font-size: 0.95rem; letter-spacing: 2px; }
+        #footer-preview { 
+            bottom: 1.5rem; font-size: 0.8rem; letter-spacing: 1px; 
+            display: flex; justify-content: center; align-items: center;
+        }
+        #footer-preview img { max-height: 40px; max-width: 90%; object-fit: contain; }
+        
+        #backdrop-grid {
+            position: absolute; inset: 0; display: flex; flex-wrap: wrap;
+            justify-content: center; align-items: center; gap: 1.5rem; padding: 10%;
+            pointer-events: none; z-index: 1; overflow: hidden;
+        }
+        .backdrop-item {
+            display: flex; justify-content: center; align-items: center;
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            white-space: nowrap; line-height: 1; color: inherit;
+        }
+
+        #output-text { position: relative; z-index: 3; word-break: break-word; max-width: 95%; max-height: 95%; line-height: 1.25; }
+        
+        /* Pre/Post Text - between header/footer and main */
+        .pre-post-text {
+            position: relative; z-index: 3; word-break: break-word;
+            max-width: 95%; line-height: 1.3; font-weight: 500;
+        }
+        #pre-text { font-size: 1.8rem; margin-bottom: 0.3rem; }
+        #post-text { font-size: 1.8rem; margin-top: 0.3rem; }
+
+        .ratio-9-16 { aspect-ratio: 9/16; width: 100%; max-width: 300px; }
+        .ratio-16-9 { aspect-ratio: 16/9; width: 100%; max-width: 500px; }
+        .ratio-1-1 { aspect-ratio: 1/1; width: 100%; max-width: 380px; }
+        .ratio-a4 { aspect-ratio: 210/297; width: 100%; max-width: 340px; }
+
+        @media (max-width: 850px) {
+            .app-container { grid-template-columns: 1fr; padding: 1.2rem; gap: 2rem; }
+            .controls { order: 2; max-height: none; overflow: visible; }
+            .preview-area { 
+                order: 1; min-height: 280px; padding: 1rem; 
+                position: static; align-self: auto; top: auto; 
+            }
+            .btn-group { flex-direction: column; }
+        }
+    </style>
+
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="controls">
+            <div class="control-group">
+                <label>Aspect Ratio</label>
+                <select id="ratioSelect">
+                    <option value="ratio-a4">A4 (Print/PDF)</option>
+                    <option value="ratio-9-16">9:16 (Stories/Reels)</option>
+                    <option value="ratio-16-9">16:9 (YouTube/Presentation)</option>
+                    <option value="ratio-1-1">1:1 (Post/Profile)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Canvas Text</label>
+                <textarea id="textInput" placeholder="Type your main message"></textarea>
+            </div>
+
+            <div class="control-group">
+                <label>Pre & Post Text</label>
+                <textarea id="preText" placeholder="Text above main (e.g., Subtitle)" style="min-height: 50px;"></textarea>
+                <textarea id="postText" placeholder="Text below main (e.g., Tagline)" style="min-height: 50px;"></textarea>
+            </div>
+
+            <div class="control-group">
+                <label>Header & Footer</label>
+                <textarea id="headerInput" placeholder="Optional header (e.g., @tnvrakhtar)" style="min-height: 40px;"></textarea>
+                <div style="display:flex;gap:0.5rem;align-items:center;">
+                    <textarea id="footerInput" placeholder="Optional footer text or an image →" style="min-height:40px;flex:1;"></textarea>
+                    <div class="img-upload-wrap">
+                        <label class="img-upload-btn" for="footerFile"><i class="fas fa-image" aria-hidden="true"></i></label>
+                        <input type="file" id="footerFile" class="img-upload-input" accept="image/png, image/jpeg, image/webp">
+                        <button class="img-clear-btn" id="clearFooterImgBtn" style="display:none;">✕</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Canvas Text Size</label>
+                <div class="stepper-control" data-key="textSize">
+                    <button class="stepper-btn minus">−</button>
+                    <span class="stepper-value">3.0rem</span>
+                    <button class="stepper-btn plus">+</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Font Style</label>
+                <div class="cat-btns" id="fontCategories">
+                    <div class="pill active" data-cat="modern">Modern</div>
+                    <div class="pill" data-cat="classic">Classic</div>
+                    <div class="pill" data-cat="fun">Fun</div>
+                </div>
+                <div class="style-btns" id="styleToggles">
+                    <div class="style-btn b" title="Bold">B</div>
+                    <div class="style-btn i" title="Italic">I</div>
+                    <div class="style-btn u" title="Underline">U</div>
+            
+
+            <div class="control-group">
+               
+                <div class="color-toggle">
+                    <input type="radio" name="fontColor" id="colorWhite" value="#FFFFFF" checked>
+                    <label for="colorWhite">White</label>
+                    <input type="radio" name="fontColor" id="colorBlack" value="#000000">
+                    <label for="colorBlack">Black</label>
+                </div>
+            </div>    </div>
+            </div>
+
+            <div class="control-group">
+                <label>Background Gradient</label>
+                <div class="color-pick-row">
+                    <div class="wrap"><span>Start</span><input type="color" id="bgColor1" value="#8EC5FC"></div>
+                    <div class="wrap"><span>End</span><input type="color" id="bgColor2" value="#E0C3FC"></div>
+                </div>
+            </div>
+
+            <!-- Darker panel for backdrop controls -->
+            <div class="backdrop-panel">
+                <div class="control-group">
+                    <label>Backdrop Content</label>
+                    <textarea id="backdropText" placeholder="Optional backdrop text..."></textarea>
+                    <div class="img-upload-wrap">
+                        or <label class="img-upload-btn" for="backdropFile"><i class="fas fa-image" aria-hidden="true"></i> </label>
+                        <input type="file" id="backdropFile" class="img-upload-input" accept="image/png, image/jpeg, image/webp">
+                        <button class="img-clear-btn" id="clearImgBtn" style="display: none;">✕</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="row-label">
+                        <label>Opacity</label>
+                        <span id="opVal">100%</span>
+                    </div>
+                    <input type="range" id="opacity" min="0" max="100" step="1" value="100">
+                </div>
+                
+                <div class="control-group">
+                    <label>Tilt (Anti-clockwise)</label>
+                    <div class="tilt-options" id="tiltOptions">
+                        <button class="tilt-pill active" data-val="0">0°</button>
+                        <button class="tilt-pill" data-val="-45">−45°</button>
+                        <button class="tilt-pill" data-val="-90">−90°</button>
+                        <button class="tilt-pill" data-val="-135">−135°</button>
+                        <button class="tilt-pill" data-val="-180">−180°</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Scale</label>
+                    <div class="stepper-control" data-key="scale">
+                        <button class="stepper-btn minus">−</button>
+                        <span class="stepper-value">1.0x</span>
+                        <button class="stepper-btn plus">+</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Repeat Count</label>
+                    <div class="stepper-control" data-key="repeat">
+                        <button class="stepper-btn minus">−</button>
+                        <span class="stepper-value">1</span>
+                        <button class="stepper-btn plus">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-secondary" id="downloadJpgBtn">Save JPEG</button>
+                <button class="btn btn-primary" id="downloadPngBtn">Save PNG</button>
+            </div>
+
+            <div class="app-footer">
+                <a href="https://akhtar.co.za" target="_blank" rel="noopener">©2026 Akhtar</a>
+            </div>
+        </div>
+
+        <div class="preview-area">
+            <div id="canvas-preview" class="ratio-a4">
+                <div id="header-preview"></div>
+                <div id="backdrop-grid"></div>
+                <div id="pre-text" class="pre-post-text"></div>
+                <div id="output-text"></div>
+                <div id="post-text" class="pre-post-text"></div>
+                <div id="footer-preview"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fontMap = {
+            modern: "'Montserrat', sans-serif",
+            classic: "'Playfair Display', serif",
+            fun: "'Pacifico', cursive"
+        };
+
+        let activeCategory = 'modern';
+        let styles = { bold: false, italic: false, underline: false };
+        let backdropDataURL = null;
+        let footerImageURL = null;
+        let currentTilt = 0;
+
+        const controls = {
+            textSize: { val: 3, min: 1, max: 6, step: 0.1, fmt: v => v.toFixed(1) + 'rem' },
+            repeat:   { val: 1, min: 1, max: 20, step: 1, fmt: v => v.toString() },
+            scale:    { val: 1, min: 0.2, max: 4, step: 0.1, fmt: v => v.toFixed(1) + 'x' }
+        };
+
+        const els = {
+            text: document.getElementById('textInput'),
+            preText: document.getElementById('preText'),
+            postText: document.getElementById('postText'),
+            headerIn: document.getElementById('headerInput'),
+            footerIn: document.getElementById('footerInput'),
+            footerFile: document.getElementById('footerFile'),
+            clearFooterImgBtn: document.getElementById('clearFooterImgBtn'),
+            ratio: document.getElementById('ratioSelect'),
+            fontCategories: document.getElementById('fontCategories'),
+            styleToggles: document.getElementById('styleToggles'),
+            fontColors: document.querySelectorAll('input[name="fontColor"]'),
+            bg1: document.getElementById('bgColor1'),
+            bg2: document.getElementById('bgColor2'),
+            preview: document.getElementById('canvas-preview'),
+            output: document.getElementById('output-text'),
+            preEl: document.getElementById('pre-text'),
+            postEl: document.getElementById('post-text'),
+            headerPrev: document.getElementById('header-preview'),
+            footerPrev: document.getElementById('footer-preview'),
+            backdropGrid: document.getElementById('backdrop-grid'),
+            bdText: document.getElementById('backdropText'),
+            bdFile: document.getElementById('backdropFile'),
+            clearBtn: document.getElementById('clearImgBtn'),
+            opacity: document.getElementById('opacity'),
+            opVal: document.getElementById('opVal'),
+            tiltOptions: document.getElementById('tiltOptions'),
+            downloadPngBtn: document.getElementById('downloadPngBtn'),
+            downloadJpgBtn: document.getElementById('downloadJpgBtn')
+        };
+
+        function updateStepperUI() {
+            document.querySelectorAll('.stepper-control').forEach(el => {
+                const key = el.dataset.key;
+                el.querySelector('.stepper-value').textContent = controls[key].fmt(controls[key].val);
+            });
+        }
+
+        function adjustStepper(key, dir) {
+            const c = controls[key];
+            let next = c.val + (c.step * dir);
+            next = parseFloat(next.toFixed(c.step < 1 ? 2 : 0));
+            c.val = Math.max(c.min, Math.min(c.max, next));
+            updateStepperUI();
+            updatePreview();
+        }
+
+        function applyTextStyles(el, textColor) {
+            el.style.fontFamily = fontMap[activeCategory];
+            el.style.fontWeight = styles.bold ? '700' : '500';
+            el.style.fontStyle = styles.italic ? 'italic' : 'normal';
+            el.style.textDecoration = styles.underline ? 'underline' : 'none';
+            el.style.color = textColor;
+        }
+
+        function updatePreview() {
+            const c = controls;
+            const textColor = document.querySelector('input[name="fontColor"]:checked')?.value || '#FFFFFF';
+            const opacityVal = parseInt(els.opacity.value) / 100;
+            
+            els.opVal.textContent = `${Math.round(opacityVal * 100)}%`;
+            
+            // Main text
+            els.output.textContent = els.text.value || 'Type something';
+            els.output.style.fontSize = c.textSize.val + 'rem';
+            applyTextStyles(els.output, textColor);
+
+                     // Pre/Post text (inherit font & color, but ignore B/I/U toggles)
+            els.preEl.textContent = els.preText.value.trim();
+            els.postEl.textContent = els.postText.value.trim();
+            
+            [els.preEl, els.postEl].forEach(el => {
+                el.style.fontFamily = fontMap[activeCategory];
+                el.style.fontWeight = '500'; // Fixed medium weight, ignores Bold toggle
+                el.style.fontStyle = 'normal';
+                el.style.textDecoration = 'none';
+                el.style.color = textColor;
+            });
+
+            // Header
+            els.headerPrev.textContent = els.headerIn.value.trim();
+            els.headerPrev.style.color = textColor;
+            els.headerPrev.style.fontFamily = fontMap[activeCategory];
+            
+            // Footer: image OR text
+            els.footerPrev.innerHTML = '';
+            if (footerImageURL) {
+                const img = document.createElement('img');
+                img.src = footerImageURL;
+                img.alt = 'Footer';
+                els.footerPrev.appendChild(img);
+            } else {
+                els.footerPrev.textContent = els.footerIn.value.trim();
+                els.footerPrev.style.color = textColor;
+                els.footerPrev.style.fontFamily = fontMap[activeCategory];
+            }
+
+            els.preview.className = els.ratio.value;
+            els.preview.style.background = `linear-gradient(135deg, ${els.bg1.value}, ${els.bg2.value})`;
+
+            renderBackdrop(textColor, opacityVal);
+        }
+
+        function renderBackdrop(textColor, opacityVal) {
+            const c = controls;
+            els.backdropGrid.innerHTML = '';
+            const hasContent = backdropDataURL || els.bdText.value.trim();
+            if (!hasContent) return;
+
+            for (let i = 0; i < c.repeat.val; i++) {
+                const item = document.createElement('div');
+                item.className = 'backdrop-item';
+                
+                if (backdropDataURL) {
+                    item.style.backgroundImage = `url('${backdropDataURL}')`;
+                    item.style.width = '40px'; item.style.height = '40px';
+                    item.style.backgroundSize = 'cover';
+                } else {
+                    item.textContent = els.bdText.value.trim();
+                    item.style.fontSize = '3rem';
+                    item.style.color = textColor;
+                    item.style.fontFamily = fontMap[activeCategory];
+                }
+
+                item.style.opacity = opacityVal;
+                item.style.transform = `rotate(${currentTilt}deg) scale(${c.scale.val})`;
+                els.backdropGrid.appendChild(item);
+            }
+        }
+
+        // Toggle button UI helpers
+        function setUploadState(btn, clearBtn, hasFile) {
+            btn.style.display = hasFile ? 'none' : 'inline-flex';
+            clearBtn.style.display = hasFile ? 'inline-flex' : 'none';
+        }
+
+        // Event Listeners
+        [els.text, els.preText, els.postText, els.headerIn, els.footerIn, els.ratio, els.bg1, els.bg2, els.opacity].forEach(el => {
+            el.addEventListener('input', updatePreview);
+        });
+
+        els.fontColors.forEach(r => {
+            r.addEventListener('change', updatePreview);
+            r.addEventListener('input', updatePreview);
+        });
+
+        els.fontCategories.addEventListener('click', (e) => {
+            const btn = e.target.closest('.pill');
+            if (!btn) return;
+            els.fontCategories.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            activeCategory = btn.dataset.cat;
+            updatePreview();
+        });
+
+        els.styleToggles.addEventListener('click', (e) => {
+            const btn = e.target.closest('.style-btn');
+            if (!btn) return;
+            btn.classList.toggle('active');
+            if (btn.classList.contains('b')) styles.bold = btn.classList.contains('active');
+            if (btn.classList.contains('i')) styles.italic = btn.classList.contains('active');
+            if (btn.classList.contains('u')) styles.underline = btn.classList.contains('active');
+            updatePreview();
+        });
+
+        document.querySelectorAll('.stepper-control').forEach(el => {
+            const key = el.dataset.key;
+            el.querySelector('.minus').addEventListener('click', () => adjustStepper(key, -1));
+            el.querySelector('.plus').addEventListener('click', () => adjustStepper(key, 1));
+        });
+
+        els.tiltOptions.addEventListener('click', (e) => {
+            const btn = e.target.closest('.tilt-pill');
+            if (!btn) return;
+            els.tiltOptions.querySelectorAll('.tilt-pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            currentTilt = parseInt(btn.dataset.val);
+            updatePreview();
+        });
+
+        // Backdrop image upload (toggle button pattern)
+        els.bdFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                backdropDataURL = ev.target.result;
+                els.bdText.value = ''; // Clear text when image is set
+                setUploadState(els.bdFile.nextElementSibling, els.clearBtn, true);
+                updatePreview();
+            };
+            reader.readAsDataURL(file);
+        });
+
+        els.clearBtn.addEventListener('click', () => {
+            els.bdFile.value = '';
+            backdropDataURL = null;
+            setUploadState(els.bdFile.previousElementSibling, els.clearBtn, false);
+            updatePreview();
+        });
+
+        // Footer image upload (toggle button pattern)
+        els.footerFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                footerImageURL = ev.target.result;
+                els.footerIn.value = ''; // Clear text when image is set
+                setUploadState(els.footerFile.previousElementSibling, els.clearFooterImgBtn, true);
+                updatePreview();
+            };
+            reader.readAsDataURL(file);
+        });
+
+        els.clearFooterImgBtn.addEventListener('click', () => {
+            els.footerFile.value = '';
+            footerImageURL = null;
+            setUploadState(els.footerFile.previousElementSibling, els.clearFooterImgBtn, false);
+            updatePreview();
+        });
+
+        // Export handlers
+        els.downloadPngBtn.addEventListener('click', async () => {
+            els.downloadPngBtn.textContent = 'Rendering...';
+            els.downloadPngBtn.disabled = true;
+            try {
+                await document.fonts.ready;
+                const canvas = await html2canvas(els.preview, { scale: 3, useCORS: true, backgroundColor: null, logging: false, allowTaint: true });
+                const link = document.createElement('a');
+                link.download = `canvas-${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png', 0.95);
+                link.click();
+            } catch (e) { alert('Export failed: ' + e.message); }
+            els.downloadPngBtn.textContent = 'Save PNG';
+            els.downloadPngBtn.disabled = false;
+        });
+
+        els.downloadJpgBtn.addEventListener('click', async () => {
+            els.downloadJpgBtn.textContent = 'Rendering...';
+            els.downloadJpgBtn.disabled = true;
+            try {
+                await document.fonts.ready;
+                const canvas = await html2canvas(els.preview, { scale: 3, useCORS: true, backgroundColor: '#000000', logging: false, allowTaint: true });
+                const link = document.createElement('a');
+                link.download = `canvas-${Date.now()}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.92);
+                link.click();
+            } catch (e) { alert('Export failed: ' + e.message); }
+            els.downloadJpgBtn.textContent = 'Save JPEG';
+            els.downloadJpgBtn.disabled = false;
+        });
+
+        // Init
+        updateStepperUI();
+        updatePreview();
+    </script>
+  <script src="https://theattn.com/load.js"></script>
+</body>
+</html>
