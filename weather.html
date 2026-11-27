@@ -28,62 +28,51 @@
     <div id="calendar" class="calendar"></div>
 
     <script>
-        // WARNING: Do not expose this key in client-side code in production.
-        const API_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC93ZWF0aGVyYXBpLmZvcmVjYS5uZXRcL2F1dGhvcml6ZVwvdG9rZW4ucGhwIiwiaWF0IjoxNzk1NzY4NDcyLCJleHAiOjk5OTk5OTk5OTksIm5iZiI6MTc5NTc2ODQ3MiwianRpIjoiNDJhZjk4OGYzNTBhYmZiNiIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTA3MzMyNTM5ODQyMTc4NjUyMTkxIiwiZm10IjoiUkdxd2RtSjl3UERYZFBSbTBrNHBYZz09IiwiY2x1c3RlciI6InBnIn0.cRk4BM9ZCHqkcCsGHXxmWSDEA731nz4IkgUaa3plXQU'; 
-        
-        async function getWeather() {
-            const city = document.getElementById('cityInput').value.trim();
-            const errorDiv = document.getElementById('error');
-            const calendarDiv = document.getElementById('calendar');
-            
-            errorDiv.textContent = '';
-            calendarDiv.innerHTML = '';
+    async function getWeather() {
+        const city = document.getElementById('cityInput').value.trim();
+        const errorDiv = document.getElementById('error');
+        const calendarDiv = document.getElementById('calendar');
 
-            if (!city) {
-                errorDiv.textContent = 'Please enter a city name.';
-                return;
-            }
+        errorDiv.textContent = '';
+        calendarDiv.innerHTML = '';
 
-            try {
-                // Step 1: Search for location to get ID
-                const searchRes = await fetch(`https://weatherapi.foreca.net/api/v1/location/search/${encodeURIComponent(city)}`, {
-                    headers: { 'Authorization': `Bearer ${API_KEY}` }
-                });
-                const searchData = await searchRes.json();
-
-                if (!searchData.locations || searchData.locations.length === 0) {
-                    throw new Error('City not found.');
-                }
-
-                const locationId = searchData.locations[0].id;
-
-                // Step 2: Fetch 14-day daily forecast (maximum allowed by Foreca)
-                const forecastRes = await fetch(`https://weatherapi.foreca.net/api/v1/forecast/daily/${locationId}?periods=14&dataset=full`, {
-                    headers: { 'Authorization': `Bearer ${API_KEY}` }
-                });
-                const forecastData = await forecastRes.json();
-
-                // Step 3: Render calendar
-                forecastData.forecast.forEach(day => {
-                    const dateObj = new Date(day.date);
-                    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-                    const dateNum = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-                    
-                    const card = document.createElement('div');
-                    card.className = 'day-card';
-                    card.innerHTML = `
-                        <div class="date">${dayName}, ${dateNum}</div>
-                        <div class="temp">${Math.round(day.minTemp)}° to ${Math.round(day.maxTemp)}°C</div>
-                        <div class="condition">${day.symbolPhrase || 'No data'}</div>
-                    `;
-                    calendarDiv.appendChild(card);
-                });
-
-            } catch (err) {
-                errorDiv.textContent = `Error: ${err.message}`;
-                console.error(err);
-            }
+        if (!city) {
+            errorDiv.textContent = 'Please enter a city name.';
+            return;
         }
-    </script>
+
+        try {
+            // Call your Cloudflare Worker proxy (key stays server-side)
+            const workerUrl = `https://test.tan360.workers.dev/?city=${encodeURIComponent(city)}`;
+            const response = await fetch(workerUrl);
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Request failed (${response.status})`);
+            }
+
+            const forecastData = await response.json();
+
+            forecastData.forecast.forEach(day => {
+                const dateObj = new Date(day.date);
+                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+                const dateNum = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+
+                const card = document.createElement('div');
+                card.className = 'day-card';
+                card.innerHTML = `
+                    <div class="date">${dayName}, ${dateNum}</div>
+                    <div class="temp">${Math.round(day.minTemp)}° to ${Math.round(day.maxTemp)}°C</div>
+                    <div class="condition">${day.symbolPhrase || 'No data'}</div>
+                `;
+                calendarDiv.appendChild(card);
+            });
+
+        } catch (err) {
+            errorDiv.textContent = `Error: ${err.message}`;
+            console.error(err);
+        }
+    }
+</script>
 </body>
 </html>
