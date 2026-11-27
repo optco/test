@@ -13,24 +13,42 @@
         .calendar { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 1rem; }
         .day-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; text-align: center; background: #fafafa; }
         .day-card .date { font-weight: bold; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .day-card .icon { font-size: 1.6rem; }
         .day-card .temp { font-size: 1.1rem; color: #333; margin: 0.5rem 0; }
         .day-card .condition { font-size: 0.8rem; color: #666; }
         .error { color: #d32f2f; margin-top: 1rem; font-weight: bold; }
+        .status { color: #666; margin-top: 1rem; }
     </style>
 </head>
 <body>
     <h1>Weather Calendar</h1>
     <div class="search-box">
-        <input type="text" id="cityInput" placeholder="Enter city name (e.g., London)">
+        <input type="text" id="cityInput" placeholder="Enter city name (e.g., London)" onkeydown="if(event.key==='Enter')getWeather()">
         <button onclick="getWeather()">Get Forecast</button>
     </div>
     <div id="error" class="error"></div>
+    <div id="status" class="status"></div>
     <div id="calendar" class="calendar"></div>
 
     <script>
+    // Free, key-less APIs (Open-Meteo geocoding + forecast) — no proxy/worker needed.
+    const WMO = {
+        0:['Clear sky','☀️'], 1:['Mainly clear','🌤️'], 2:['Partly cloudy','⛅'], 3:['Overcast','☁️'],
+        45:['Fog','🌫️'], 48:['Rime fog','🌫️'],
+        51:['Light drizzle','🌦️'], 53:['Drizzle','🌦️'], 55:['Heavy drizzle','🌧️'],
+        56:['Freezing drizzle','🌧️'], 57:['Heavy freezing drizzle','🌧️'],
+        61:['Light rain','🌦️'], 63:['Rain','🌧️'], 65:['Heavy rain','🌧️'],
+        66:['Freezing rain','🌧️'], 67:['Heavy freezing rain','🌧️'],
+        71:['Light snow','🌨️'], 73:['Snow','🌨️'], 75:['Heavy snow','❄️'], 77:['Snow grains','❄️'],
+        80:['Light showers','🌦️'], 81:['Showers','🌧️'], 82:['Heavy showers','⛈️'],
+        85:['Snow showers','🌨️'], 86:['Heavy snow showers','❄️'],
+        95:['Thunderstorm','⛈️'], 96:['Storm with hail','⛈️'], 99:['Heavy storm with hail','⛈️']
+    };
+
     async function getWeather() {
         const city = document.getElementById('cityInput').value.trim();
         const errorDiv = document.getElementById('error');
+        const statusDiv = document.getElementById('status');
         const calendarDiv = document.getElementById('calendar');
 
         errorDiv.textContent = '';
@@ -42,37 +60,56 @@
         }
 
         try {
-            // Call your Cloudflare Worker proxy (key stays server-side)
-            const workerUrl = `https://test.tan360.workers.dev/?city=${encodeURIComponent(city)}`;
-            const response = await fetch(workerUrl);
+            statusDiv.textContent = 'Loading…';
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Request failed (${response.status})`);
+            // 1. Geocode the city name (free, no API key)
+            const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en`);
+            if (!geoRes.ok) throw new Error(`Geocoding failed (${geoRes.status})`);
+            const geo = await geoRes.json();
+            if (!geo.results || !geo.results.length) {
+                throw new Error(`City not found: "${city}"`);
             }
+            const loc = geo.results[0];
+            const place = [loc.name, loc.admin1, loc.country].filter(Boolean).join(', ');
 
-            const forecastData = await response.json();
+            // 2. Fetch 14-day daily forecast (free, no API key)
+            const fcUrl = `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}` +
+                          `&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=14&timezone=auto`;
+            const fcRes = await fetch(fcUrl);
+            if (!fcRes.ok) throw new Error(`Forecast request failed (${fcRes.status})`);
+            const fc = await fcRes.json();
+            const days = (fc.daily && fc.daily.time) || [];
+            if (!days.length) throw new Error('No forecast data returned.');
 
-            forecastData.forecast.forEach(day => {
-                const dateObj = new Date(day.date);
+            statusDiv.textContent = `14-day forecast for ${place}`;
+
+            days.forEach((dateStr, i) => {
+                const dateObj = new Date(dateStr + 'T12:00:00');
                 const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
                 const dateNum = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                const min = fc.daily.temperature_2m_min[i];
+                const max = fc.daily.temperature_2m_max[i];
+                const code = fc.daily.weather_code[i];
+                const [phrase, icon] = WMO[code] || ['No data', '❔'];
 
                 const card = document.createElement('div');
                 card.className = 'day-card';
                 card.innerHTML = `
                     <div class="date">${dayName}, ${dateNum}</div>
-                    <div class="temp">${Math.round(day.minTemp)}° to ${Math.round(day.maxTemp)}°C</div>
-                    <div class="condition">${day.symbolPhrase || 'No data'}</div>
+                    <div class="icon">${icon}</div>
+                    <div class="temp">${Math.round(min)}° to ${Math.round(max)}°C</div>
+                    <div class="condition">${phrase}</div>
                 `;
                 calendarDiv.appendChild(card);
             });
 
+            statusDiv.textContent = '';
         } catch (err) {
+            statusDiv.textContent = '';
             errorDiv.textContent = `Error: ${err.message}`;
             console.error(err);
         }
     }
-</script>
+    </script>
 </body>
 </html>
