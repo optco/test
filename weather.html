@@ -6,30 +6,49 @@
     <title>14-Day Weather Calendar</title>
     <link rel="stylesheet" href="https://itesteye.com/bg.css">
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        body { font-family: system-ui, -apple-system, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
         .search-box { display: flex; gap: 0.5rem; margin-bottom: 2rem; }
         .input-wrap { position: relative; flex: 1; }
         input { width: 100%; box-sizing: border-box; padding: 0.75rem 2.9rem 0.75rem 0.75rem; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
-        .loc-btn { position: absolute; right: 4px; top: 4px; bottom: 4px; width: 2.4rem; padding: 0; background: transparent; color: #0056b3; border-radius: 4px; display: grid; place-items: center; }
+        button { padding: 0.75rem 1.5rem; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+        button:hover { background: #004494; }
+        button:focus-visible, input:focus-visible { outline: 3px solid #0056b3; outline-offset: 2px; }
+        .loc-btn { position: absolute; right: 4px; top: 4px; bottom: 4px; width: 2.4rem; padding: 0; background: transparent; color: #0056b3; display: grid; place-items: center; }
         .loc-btn:hover { background: #e8f0fa; }
         .loc-btn svg { width: 1.3rem; height: 1.3rem; }
         .loc-btn.busy svg { animation: pulse 1s ease-in-out infinite; }
         @keyframes pulse { 50% { opacity: .3; } }
-        button { padding: 0.75rem 1.5rem; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
-        button:hover { background: #004494; }
-        button:focus-visible, input:focus-visible { outline: 3px solid #0056b3; outline-offset: 2px; }
         .suggestions { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 10; margin: 0; padding: 0.25rem 0; list-style: none; background: #fff; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 6px 18px rgba(0,0,0,.12); max-height: 280px; overflow-y: auto; }
         .suggestions[hidden] { display: none; }
         .suggestions li { padding: 0.55rem 0.85rem; cursor: pointer; }
         .suggestions li small { display: block; color: #666; }
         .suggestions li:hover, .suggestions li.active { background: #e8f0fa; }
-        .calendar { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 1rem; }
-        .day-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; text-align: center; background: #fafafa; }
-        .day-card.today { border: 2px solid #0056b3; }
+        .calendar { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.75rem; }
+        .day-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 0.9rem 0.4rem; text-align: center; background: #fafafa; }
         .day-card .date { font-weight: bold; margin-bottom: 0.5rem; font-size: 0.9rem; }
         .day-card .icon { font-size: 1.6rem; }
-        .day-card .temp { font-size: 1.1rem; color: #333; margin: 0.5rem 0; }
+        .day-card .temp { font-size: 1rem; color: #333; margin: 0.5rem 0; }
         .day-card .condition { font-size: 0.8rem; color: #666; }
+
+        /* Today: one big card spanning the full width */
+        .today-card { grid-column: 1 / -1; color: #fff; border-radius: 12px; padding: 1.5rem 1.75rem;
+                      background: linear-gradient(135deg, #0056b3, #3a8dde); }
+        .today-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1rem; margin-bottom: 1rem; }
+        .today-label { font-size: 1.5rem; font-weight: 700; }
+        .today-date { font-size: 1.05rem; opacity: .9; }
+        .today-body { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 2rem; }
+        .today-icon { font-size: 4.5rem; line-height: 1; }
+        .today-main { flex: 1; min-width: 160px; }
+        .today-temp { font-size: 3rem; font-weight: 700; line-height: 1.1; }
+        .today-temp span { font-size: 1.3rem; font-weight: 500; opacity: .85; }
+        .today-cond { font-size: 1.2rem; margin-top: 0.25rem; }
+        .today-meta { display: grid; gap: 0.35rem; font-size: 1rem; }
+
+        /* Next 13 days fill two rows: 7 + 6, with the last card stretched to close the gap */
+        @media (min-width: 760px) {
+            .calendar { grid-template-columns: repeat(7, 1fr); }
+            .calendar .day-card:last-child { grid-column: span 2; }
+        }
         .error { color: #d32f2f; margin-top: 1rem; font-weight: bold; }
         .status { color: #666; margin-top: 1rem; }
     </style>
@@ -56,6 +75,7 @@
     <div id="calendar" class="calendar"></div>
 
     <script>
+    // Free, key-less APIs: Open-Meteo (geocoding + forecast) and BigDataCloud (reverse geocoding).
     const WMO = {
         0:['Clear sky','☀️'], 1:['Mainly clear','🌤️'], 2:['Partly cloudy','⛅'], 3:['Overcast','☁️'],
         45:['Fog','🌫️'], 48:['Rime fog','🌫️'],
@@ -76,16 +96,21 @@
     const calendarDiv = document.getElementById('calendar');
     const locBtn = document.getElementById('locBtn');
 
-    let selectedLoc = null;     // set when the user picks a suggestion (exact coordinates)
+    let selectedLoc = null;   // exact place chosen from suggestions or geolocation
     let suggestions = [];
     let activeIndex = -1;
     let debounceTimer = null;
     let suggestAbort = null;
+    let forecastAbort = null;
 
     const placeName = l => [l.name, l.admin1, l.country].filter(Boolean).join(', ');
+    const setStatus = msg => { statusDiv.textContent = msg; };
+    const showError = msg => { errorDiv.textContent = `Error: ${msg}`; };
 
     /* ---------- Suggestions ---------- */
     function hideSuggestions() {
+        clearTimeout(debounceTimer);
+        if (suggestAbort) suggestAbort.abort();
         list.hidden = true;
         input.setAttribute('aria-expanded', 'false');
         activeIndex = -1;
@@ -93,7 +118,7 @@
 
     function renderSuggestions() {
         list.replaceChildren();
-        if (!suggestions.length) return hideSuggestions();
+        if (!suggestions.length) { list.hidden = true; return; }
         suggestions.forEach((loc, i) => {
             const li = document.createElement('li');
             li.role = 'option';
@@ -136,9 +161,9 @@
     function chooseSuggestion(i) {
         const loc = suggestions[i];
         if (!loc) return;
+        hideSuggestions();
         selectedLoc = loc;
         input.value = placeName(loc);
-        hideSuggestions();
         loadForecast(loc);
     }
 
@@ -158,80 +183,81 @@
         else if (e.key === 'Enter') {
             e.preventDefault();
             if (open && activeIndex >= 0) chooseSuggestion(activeIndex);
-            else { hideSuggestions(); getWeather(); }
+            else getWeather();
         }
     });
 
     input.addEventListener('blur', hideSuggestions);
-    document.getElementById('goBtn').addEventListener('click', () => { hideSuggestions(); getWeather(); });
+    document.getElementById('goBtn').addEventListener('click', getWeather);
 
     /* ---------- Current location ---------- */
     locBtn.addEventListener('click', () => {
         errorDiv.textContent = '';
-        if (!navigator.geolocation) {
-            errorDiv.textContent = 'Your browser does not support location.';
-            return;
-        }
+        hideSuggestions();
+        if (!navigator.geolocation) { showError('Geolocation is not supported by this browser.'); return; }
         locBtn.classList.add('busy');
-        statusDiv.textContent = 'Finding your location…';
+        setStatus('Finding your location…');
         navigator.geolocation.getCurrentPosition(async pos => {
             const { latitude, longitude } = pos.coords;
-            let loc = { name: 'Your location', latitude, longitude };
+            const loc = { name: 'Your location', latitude, longitude, admin1: '', country: '' };
             try {
-                // Free reverse geocoding, no key needed
                 const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
                 if (r.ok) {
                     const g = await r.json();
-                    loc.name = g.city || g.locality || g.principalSubdivision || 'Your location';
-                    loc.admin1 = g.principalSubdivision && g.principalSubdivision !== loc.name ? g.principalSubdivision : '';
-                    loc.country = g.countryName || '';
+                    const city = g.city || g.locality || g.principalSubdivision;
+                    if (city) {
+                        loc.name = city;
+                        loc.admin1 = g.principalSubdivision && g.principalSubdivision !== city ? g.principalSubdivision : '';
+                        loc.country = g.countryName || '';
+                    }
                 }
             } catch (e) { /* keep fallback name */ }
+            locBtn.classList.remove('busy');
             selectedLoc = loc;
             input.value = loc.name === 'Your location' ? '' : placeName(loc);
-            locBtn.classList.remove('busy');
-            hideSuggestions();
             loadForecast(loc);
         }, err => {
             locBtn.classList.remove('busy');
-            statusDiv.textContent = '';
-            errorDiv.textContent = err.code === 1
+            setStatus('');
+            showError(err.code === 1
                 ? 'Location permission was denied. Allow it in your browser settings, or type a city.'
-                : 'Could not get your location. Try typing a city instead.';
-        }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+                : 'Could not get your location. Try typing a city instead.');
+        }, { timeout: 10000, maximumAge: 300000 });
     });
 
     /* ---------- Weather ---------- */
     async function getWeather() {
-        const city = input.value.trim();
+        hideSuggestions();
         errorDiv.textContent = '';
-        if (!city) { errorDiv.textContent = 'Please enter a city name.'; return; }
-
-        if (selectedLoc) return loadForecast(selectedLoc);
+        const city = input.value.trim();
+        if (!city) { showError('Please enter a city name.'); return; }
+        if (selectedLoc) { loadForecast(selectedLoc); return; }
 
         try {
-            statusDiv.textContent = 'Loading…';
-            calendarDiv.innerHTML = '';
-            const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en`);
-            if (!geoRes.ok) throw new Error(`Geocoding failed (${geoRes.status})`);
-            const geo = await geoRes.json();
+            setStatus('Loading…');
+            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en`);
+            if (!res.ok) throw new Error(`Geocoding failed (${res.status})`);
+            const geo = await res.json();
             if (!geo.results || !geo.results.length) throw new Error(`City not found: "${city}"`);
             selectedLoc = geo.results[0];
             await loadForecast(selectedLoc);
         } catch (err) {
-            statusDiv.textContent = '';
-            errorDiv.textContent = `Error: ${err.message}`;
+            setStatus('');
+            showError(err.message);
         }
     }
 
     async function loadForecast(loc) {
+        if (forecastAbort) forecastAbort.abort();
+        forecastAbort = new AbortController();
         errorDiv.textContent = '';
-        calendarDiv.innerHTML = '';
-        statusDiv.textContent = 'Loading…';
+        calendarDiv.replaceChildren();
+        setStatus('Loading…');
         try {
             const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}` +
-                        `&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=14&timezone=auto`;
-            const res = await fetch(url);
+                        `&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,wind_speed_10m_max` +
+                        `&forecast_days=14&timezone=auto`;
+            const res = await fetch(url, { signal: forecastAbort.signal });
             if (!res.ok) throw new Error(`Forecast request failed (${res.status})`);
             const fc = await res.json();
             const days = (fc.daily && fc.daily.time) || [];
@@ -239,25 +265,50 @@
 
             days.forEach((dateStr, i) => {
                 const d = new Date(dateStr + 'T12:00:00');
-                const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-                const dateNum = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
                 const min = fc.daily.temperature_2m_min[i];
                 const max = fc.daily.temperature_2m_max[i];
                 const [phrase, icon] = WMO[fc.daily.weather_code[i]] || ['No data', '❔'];
-
                 const card = document.createElement('div');
-                card.className = 'day-card' + (i === 0 ? ' today' : '');
-                card.innerHTML = `
-                    <div class="date">${i === 0 ? 'Today' : `${dayName}, ${dateNum}`}</div>
-                    <div class="icon">${icon}</div>
-                    <div class="temp">${Math.round(min)}° to ${Math.round(max)}°C</div>
-                    <div class="condition">${phrase}</div>`;
+
+                if (i === 0) {
+                    // Big "today" card: weekday + full date on top
+                    const fullDate = d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                    const rain = fc.daily.precipitation_probability_max && fc.daily.precipitation_probability_max[i];
+                    const wind = fc.daily.wind_speed_10m_max && fc.daily.wind_speed_10m_max[i];
+                    card.className = 'today-card';
+                    card.innerHTML = `
+                        <div class="today-head">
+                            <span class="today-label">Today</span>
+                            <span class="today-date">${fullDate}</span>
+                        </div>
+                        <div class="today-body">
+                            <div class="today-icon">${icon}</div>
+                            <div class="today-main">
+                                <div class="today-temp">${Math.round(max)}°<span> / ${Math.round(min)}°C</span></div>
+                                <div class="today-cond">${phrase}</div>
+                            </div>
+                            <div class="today-meta">
+                                ${rain != null ? `<div>💧 Rain chance: ${rain}%</div>` : ''}
+                                ${wind != null ? `<div>💨 Max wind: ${Math.round(wind)} km/h</div>` : ''}
+                            </div>
+                        </div>`;
+                } else {
+                    const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+                    const dateNum = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                    card.className = 'day-card';
+                    card.innerHTML = `
+                        <div class="date">${dayName}, ${dateNum}</div>
+                        <div class="icon">${icon}</div>
+                        <div class="temp">${Math.round(min)}° to ${Math.round(max)}°C</div>
+                        <div class="condition">${phrase}</div>`;
+                }
                 calendarDiv.appendChild(card);
             });
-            statusDiv.textContent = `14-day forecast for ${placeName(loc)}`;
+            setStatus(`14-day forecast for ${placeName(loc)}`);
         } catch (err) {
-            statusDiv.textContent = '';
-            errorDiv.textContent = `Error: ${err.message}`;
+            if (err.name === 'AbortError') return;
+            setStatus('');
+            showError(err.message);
         }
     }
     </script>
