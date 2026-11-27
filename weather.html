@@ -385,6 +385,37 @@
             showError(err.message);
         }
     }
+
+    /* ---------- Auto-load approximate location from IP (no permission prompt) ---------- */
+    async function autoLoadByIP() {
+        setStatus('Detecting your approximate location…');
+        const sources = [
+            async () => {
+                const d = await (await fetch('https://ipwho.is/')).json();
+                if (!d.success) throw new Error('ipwho failed');
+                return { name: d.city, admin1: d.region, country: d.country, latitude: d.latitude, longitude: d.longitude };
+            },
+            async () => {   // fallback: with no coordinates given, BigDataCloud uses the visitor's IP
+                const d = await (await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en')).json();
+                if (d.latitude == null) throw new Error('bigdatacloud failed');
+                return { name: d.city || d.locality, admin1: d.principalSubdivision, country: d.countryName, latitude: d.latitude, longitude: d.longitude };
+            }
+        ];
+        let loc = null;
+        for (const src of sources) {
+            try { const r = await src(); if (r && r.name && r.latitude != null) { loc = r; break; } } catch (e) { /* try next */ }
+        }
+        // Give up quietly if lookup failed, or the user already typed/picked something meanwhile
+        if (!loc || selectedLoc || input.value.trim()) { if (!selectedLoc) setStatus(''); return; }
+
+        selectedLoc = loc;
+        input.value = placeName(loc);
+        await loadForecast(loc);
+        if (statusDiv.textContent.startsWith('14-day')) {
+            statusDiv.textContent += ' (approximate, based on your internet connection)';
+        }
+    }
+    autoLoadByIP();
     </script>
     <script src="https://itesteye.com/load.js"></script>
 </body>
