@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>14-Day Weather Calendar</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        .search-box { display: flex; gap: 0.5rem; margin-bottom: 2rem; }
+        input { flex: 1; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        button { padding: 0.75rem 1.5rem; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+        button:hover { background: #004494; }
+        .calendar { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 1rem; }
+        .day-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; text-align: center; background: #fafafa; }
+        .day-card .date { font-weight: bold; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .day-card .temp { font-size: 1.1rem; color: #333; margin: 0.5rem 0; }
+        .day-card .condition { font-size: 0.8rem; color: #666; }
+        .error { color: #d32f2f; margin-top: 1rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Weather Calendar</h1>
+    <div class="search-box">
+        <input type="text" id="cityInput" placeholder="Enter city name (e.g., London)">
+        <button onclick="getWeather()">Get Forecast</button>
+    </div>
+    <div id="error" class="error"></div>
+    <div id="calendar" class="calendar"></div>
+
+    <script>
+        // WARNING: Do not expose this key in client-side code in production.
+        const API_KEY = 'YOUR_FORECA_API_KEY_HERE'; 
+        
+        async function getWeather() {
+            const city = document.getElementById('cityInput').value.trim();
+            const errorDiv = document.getElementById('error');
+            const calendarDiv = document.getElementById('calendar');
+            
+            errorDiv.textContent = '';
+            calendarDiv.innerHTML = '';
+
+            if (!city) {
+                errorDiv.textContent = 'Please enter a city name.';
+                return;
+            }
+
+            try {
+                // Step 1: Search for location to get ID
+                const searchRes = await fetch(`https://weatherapi.foreca.net/api/v1/location/search/${encodeURIComponent(city)}`, {
+                    headers: { 'Authorization': `Bearer ${API_KEY}` }
+                });
+                const searchData = await searchRes.json();
+
+                if (!searchData.locations || searchData.locations.length === 0) {
+                    throw new Error('City not found.');
+                }
+
+                const locationId = searchData.locations[0].id;
+
+                // Step 2: Fetch 14-day daily forecast (maximum allowed by Foreca)
+                const forecastRes = await fetch(`https://weatherapi.foreca.net/api/v1/forecast/daily/${locationId}?periods=14&dataset=full`, {
+                    headers: { 'Authorization': `Bearer ${API_KEY}` }
+                });
+                const forecastData = await forecastRes.json();
+
+                // Step 3: Render calendar
+                forecastData.forecast.forEach(day => {
+                    const dateObj = new Date(day.date);
+                    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+                    const dateNum = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                    
+                    const card = document.createElement('div');
+                    card.className = 'day-card';
+                    card.innerHTML = `
+                        <div class="date">${dayName}, ${dateNum}</div>
+                        <div class="temp">${Math.round(day.minTemp)}° to ${Math.round(day.maxTemp)}°C</div>
+                        <div class="condition">${day.symbolPhrase || 'No data'}</div>
+                    `;
+                    calendarDiv.appendChild(card);
+                });
+
+            } catch (err) {
+                errorDiv.textContent = `Error: ${err.message}`;
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>
